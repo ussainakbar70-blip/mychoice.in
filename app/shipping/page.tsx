@@ -3,14 +3,41 @@ import type { Metadata } from "next";
 import { Truck, Clock, ShieldCheck, Globe } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config/site";
 
+import { buildBreadcrumbSchema } from "@/lib/seo";
+
 export const metadata: Metadata = {
   title: "Shipping & Worldwide Delivery Policy",
-  description: "Transparent international logistics timelines, customs, and tracking information.",
+  description: "Transparent international logistics timelines, customs clearance, free shipping thresholds, and real-time tracking.",
+  alternates: {
+    canonical: `${SITE_CONFIG.siteUrl}/shipping`,
+  },
+  openGraph: {
+    title: `Shipping & Worldwide Delivery Policy | ${SITE_CONFIG.brandName}`,
+    description: "Transparent international logistics timelines, customs, and tracking information.",
+    url: `${SITE_CONFIG.siteUrl}/shipping`,
+    siteName: SITE_CONFIG.brandName,
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `Shipping & Delivery Policy | ${SITE_CONFIG.brandName}`,
+    description: "Transparent international logistics timelines and door-to-door tracking.",
+  },
 };
 
 export default function ShippingPage() {
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Shipping & Logistics", url: "/shipping" },
+  ]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div className="text-center space-y-3">
         <span className="text-xs uppercase tracking-widest font-bold text-neutral-500">
           Delivery Policy

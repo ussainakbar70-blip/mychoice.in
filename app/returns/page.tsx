@@ -4,14 +4,36 @@ import Link from "next/link";
 import { AlertCircle, Ban, Truck, Mail, ShieldAlert } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config/site";
 
+import { buildBreadcrumbSchema } from "@/lib/seo";
+
 export const metadata: Metadata = {
-  title: "Return & Cancellation Policy | MYCHOICE.in",
-  description: "Official Return & Cancellation Policy for MYCHOICE.in - Automated dropshipping fulfillment and final sale guidelines.",
+  title: "Return & Cancellation Policy | Final Sale Guidelines",
+  description: "Official Return & Cancellation Policy for MYCHOICE - Automated direct-to-supplier dropshipping fulfillment, no cancellations, and final sale guidelines.",
+  alternates: {
+    canonical: `${SITE_CONFIG.siteUrl}/returns`,
+  },
+  openGraph: {
+    title: `Return & Cancellation Policy | ${SITE_CONFIG.brandName}`,
+    description: "Official Return & Cancellation Policy for MYCHOICE - Automated dropshipping fulfillment and final sale guidelines.",
+    url: `${SITE_CONFIG.siteUrl}/returns`,
+    siteName: SITE_CONFIG.brandName,
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function ReturnsPage() {
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Return & Cancellation Policy", url: "/returns" },
+  ]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-12">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       {/* Page Header */}
       <div className="text-center space-y-3">
         <span className="text-xs uppercase tracking-widest font-bold text-neutral-500">

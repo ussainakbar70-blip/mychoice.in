@@ -2,11 +2,11 @@ import { MetadataRoute } from "next";
 import { SITE_CONFIG } from "@/lib/config/site";
 
 export default function robots(): MetadataRoute.Robots {
-  const isIndexingEnabled = process.env.SITE_INDEXING_ENABLED === "true";
+  const baseUrl = SITE_CONFIG.siteUrl;
 
-  if (!isIndexingEnabled) {
-    return {
-      rules: {
+  return {
+    rules: [
+      {
         userAgent: "*",
         allow: "/",
         disallow: [
@@ -21,26 +21,23 @@ export default function robots(): MetadataRoute.Robots {
           "/order/*",
         ],
       },
-      sitemap: `${SITE_CONFIG.siteUrl}/sitemap.xml`,
-    };
-  }
-
-  return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: [
-        "/admin",
-        "/admin/*",
-        "/account",
-        "/account/*",
-        "/checkout",
-        "/checkout/*",
-        "/api",
-        "/api/*",
-        "/order/*",
-      ],
-    },
-    sitemap: `${SITE_CONFIG.siteUrl}/sitemap.xml`,
+      {
+        userAgent: "Googlebot",
+        allow: "/",
+        disallow: [
+          "/admin",
+          "/admin/*",
+          "/account",
+          "/account/*",
+          "/checkout",
+          "/checkout/*",
+          "/api",
+          "/api/*",
+          "/order/*",
+        ],
+      },
+    ],
+    sitemap: `${baseUrl}/sitemap.xml`,
+    host: baseUrl,
   };
 }

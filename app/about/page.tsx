@@ -3,14 +3,41 @@ import type { Metadata } from "next";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { Shield, Sparkles, Compass } from "lucide-react";
 
+import { buildBreadcrumbSchema } from "@/lib/seo";
+
 export const metadata: Metadata = {
-  title: "About Our Philosophy",
-  description: "The architectural craft, global logistics, and design manifesto behind MYCHOICE.in.",
+  title: "About Our Craft & Philosophy",
+  description: "Learn about the architectural craft, global dropshipping logistics, and design manifesto behind MYCHOICE.",
+  alternates: {
+    canonical: `${SITE_CONFIG.siteUrl}/about`,
+  },
+  openGraph: {
+    title: `About Our Craft & Philosophy | ${SITE_CONFIG.brandName}`,
+    description: "The architectural craft, global logistics, and design manifesto behind MYCHOICE.",
+    url: `${SITE_CONFIG.siteUrl}/about`,
+    siteName: SITE_CONFIG.brandName,
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: `About Our Philosophy | ${SITE_CONFIG.brandName}`,
+    description: "The architectural craft, global logistics, and design manifesto behind MYCHOICE.",
+  },
 };
 
 export default function AboutPage() {
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "About", url: "/about" },
+  ]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-16">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div className="text-center space-y-4 max-w-2xl mx-auto">
         <span className="text-xs uppercase tracking-widest font-bold text-brand-gold">
           The Manifesto

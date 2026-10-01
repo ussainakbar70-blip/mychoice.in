@@ -8,6 +8,7 @@ import { getCategoryBySlug, getCategories } from "@/lib/db/categories";
 import { ProductDetailView } from "@/components/product/ProductDetailView";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SITE_CONFIG } from "@/lib/config/site";
+import { buildProductSchema, buildBreadcrumbSchema } from "@/lib/seo";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -18,16 +19,59 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Product Not Found" };
 
+  const baseUrl = SITE_CONFIG.siteUrl;
+  const canonicalUrl = `${baseUrl}/product/${product.slug}`;
+  const title = product.seoTitle || `${product.name} | ${SITE_CONFIG.brandName}`;
+  const description = product.seoDescription || product.description || product.shortDescription;
+  const imageUrl = product.images[0]?.publicUrl || `${baseUrl}/favicon.svg`;
+
   return {
-    title: product.seoTitle || `${product.name} | ${SITE_CONFIG.brandName}`,
-    description: product.seoDescription || product.shortDescription,
+    title,
+    description,
+    keywords: [
+      product.name,
+      product.brandName || SITE_CONFIG.brandName,
+      "curated essentials",
+      "buy online",
+      "fast express shipping",
+      "lifestyle products",
+    ],
     alternates: {
-      canonical: `/product/${product.slug}`,
+      canonical: canonicalUrl,
     },
     openGraph: {
-      title: product.name,
-      description: product.shortDescription,
-      images: [{ url: product.images[0]?.publicUrl || "" }],
+      title,
+      description,
+      url: canonicalUrl,
+      siteName: SITE_CONFIG.brandName,
+      locale: "en_US",
+      type: "website",
+      images: [
+        {
+          url: imageUrl,
+          width: 1000,
+          height: 1000,
+          alt: product.name,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+      images: [imageUrl],
+      creator: "@mychoice_in",
+      site: "@mychoice_in",
+    },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: {
+        index: true,
+        follow: true,
+        "max-image-preview": "large",
+        "max-snippet": -1,
+      },
     },
   };
 }
@@ -47,44 +91,28 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const category = categories.find((c) => c.id === product.categoryId);
 
-  // Schema.org Structured Data
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: product.name,
-    description: product.shortDescription,
-    image: product.images.map((img) => img.publicUrl),
-    brand: {
-      "@type": "Brand",
-      name: product.brandName,
-    },
-    offers: {
-      "@type": "Offer",
-      priceCurrency: product.baseCurrency,
-      price: product.basePrice,
-      availability: "https://schema.org/InStock",
-      seller: {
-        "@type": "Organization",
-        name: SITE_CONFIG.brandName,
-      },
-    },
-    aggregateRating: {
-      "@type": "AggregateRating",
-      ratingValue: product.productRating,
-      reviewCount: product.reviewCount,
-    },
-  };
+  // Pro SEO Schemas: Product Rich Snippets + Breadcrumb Hierarchy
+  const productSchema = buildProductSchema(product);
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    ...(category ? [{ name: category.name, url: `/category/${category.slug}` }] : []),
+    { name: product.name, url: `/product/${product.slug}` },
+  ]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-16">
-      {/* JSON-LD Script */}
+      {/* Schema.org Structured Data for Google Rich Snippets */}
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
 
       {/* Breadcrumb Navigation */}
-      <nav className="flex items-center gap-2 text-xs text-neutral-500">
+      <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs text-neutral-500">
         <Link href="/" className="hover:text-neutral-900 dark:hover:text-white transition-colors">
           Home
         </Link>

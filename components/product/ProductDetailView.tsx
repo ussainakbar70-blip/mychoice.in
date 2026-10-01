@@ -179,7 +179,7 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                       : "border-neutral-200 dark:border-neutral-800 opacity-70 hover:opacity-100"
                   }`}
                 >
-                  <img src={img.publicUrl} alt={img.altText} className="w-full h-full object-cover" />
+                  <img src={img.publicUrl} alt={img.altText || product.name} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>

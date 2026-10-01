@@ -7,6 +7,7 @@ import { ProductCard } from "@/components/product/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { SITE_CONFIG } from "@/lib/config/site";
+import { buildItemListSchema } from "@/lib/seo";
 
 export default async function HomePage() {
   const [categories, { products: allProducts }] = await Promise.all([
@@ -17,9 +18,16 @@ export default async function HomePage() {
   const featuredProducts = allProducts.filter((p) => p.featured).slice(0, 4);
   const bestSellers = allProducts.filter((p) => p.bestseller).slice(0, 4);
   const newArrivals = allProducts.filter((p) => p.newArrival).slice(0, 4);
+  const featuredSchema = buildItemListSchema(featuredProducts, "Featured Curated Essentials", "/");
 
   return (
     <div className="space-y-24 sm:space-y-32 pb-24">
+      {/* Schema.org Structured Data */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(featuredSchema) }}
+      />
+
       {/* 1. HERO SECTION */}
       <section className="relative overflow-hidden bg-neutral-950 text-white min-h-[85vh] flex items-center">
         {/* Background Editorial Image with Luxury Dark Overlay */}

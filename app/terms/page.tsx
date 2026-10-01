@@ -3,14 +3,36 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_CONFIG } from "@/lib/config/site";
 
+import { buildBreadcrumbSchema } from "@/lib/seo";
+
 export const metadata: Metadata = {
-  title: "Terms of Service | MYCHOICE.in",
-  description: "Terms governing use of MYCHOICE.in, purchases, dropshipping fulfillment, and store guidelines.",
+  title: "Terms of Service | User Agreements & Disclosures",
+  description: "Terms governing use of MYCHOICE, purchases, dropshipping fulfillment model, final sale policies, and store guidelines.",
+  alternates: {
+    canonical: `${SITE_CONFIG.siteUrl}/terms`,
+  },
+  openGraph: {
+    title: `Terms of Service | ${SITE_CONFIG.brandName}`,
+    description: "Terms governing use of MYCHOICE, purchases, dropshipping fulfillment, and store guidelines.",
+    url: `${SITE_CONFIG.siteUrl}/terms`,
+    siteName: SITE_CONFIG.brandName,
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function TermsPage() {
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Terms of Service", url: "/terms" },
+  ]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
           Terms of Service

@@ -3,14 +3,36 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SITE_CONFIG } from "@/lib/config/site";
 
+import { buildBreadcrumbSchema } from "@/lib/seo";
+
 export const metadata: Metadata = {
-  title: "Privacy Policy | MYCHOICE.in",
-  description: "How MYCHOICE.in protects personal data, shares fulfillment telemetry with dropshipping partners, and handles user privacy.",
+  title: "Privacy Policy | Data Protection & Telemetry Disclosures",
+  description: "How MYCHOICE protects personal data, shares fulfillment telemetry with dropshipping partners, and handles user privacy securely.",
+  alternates: {
+    canonical: `${SITE_CONFIG.siteUrl}/privacy`,
+  },
+  openGraph: {
+    title: `Privacy Policy | ${SITE_CONFIG.brandName}`,
+    description: "How MYCHOICE protects personal data and handles user privacy.",
+    url: `${SITE_CONFIG.siteUrl}/privacy`,
+    siteName: SITE_CONFIG.brandName,
+    locale: "en_US",
+    type: "website",
+  },
 };
 
 export default function PrivacyPage() {
+  const breadcrumbSchema = buildBreadcrumbSchema([
+    { name: "Home", url: "/" },
+    { name: "Privacy Policy", url: "/privacy" },
+  ]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-8">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
       <div>
         <h1 className="text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
           Privacy Policy
