@@ -1,7 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
-import { cjService } from "@/lib/cj";
+import { cjService, getCJProductDetail } from "@/lib/cj";
 import { importCJProductAsDraft } from "@/lib/cj/products";
-import { getSupabaseServerClient } from "@/lib/db/client";
+
+function extractPid(input: string): string | null {
+  const trimmed = input.trim();
+  // If numeric string of 10+ digits
+  if (/^\d{10,25}$/.test(trimmed)) {
+    return trimmed;
+  }
+  // If CJ URL containing -p-XXXXXX or pid=XXXXXX
+  const urlPidMatch = trimmed.match(/-p-(\d+)/) || trimmed.match(/[?&]pid=(\d+)/);
+  if (urlPidMatch && urlPidMatch[1]) {
+    return urlPidMatch[1];
+  }
+  return null;
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -9,6 +22,24 @@ export async function GET(request: NextRequest) {
     const keyword = searchParams.get("keyword") || searchParams.get("productName") || "";
     const pageNum = parseInt(searchParams.get("pageNum") || searchParams.get("page") || "1", 10);
     const pageSize = parseInt(searchParams.get("pageSize") || searchParams.get("size") || "12", 10);
+
+    const pid = extractPid(keyword);
+
+    if (pid) {
+      // Direct lookup by PID or pasted CJ URL
+      const detail = await getCJProductDetail(pid);
+      if (detail.result && detail.data) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            list: [detail.data],
+            total: 1,
+            pageNum: 1,
+            pageSize: 1,
+          },
+        });
+      }
+    }
 
     const result = await cjService.getProducts({
       productName: keyword.trim() || undefined,
