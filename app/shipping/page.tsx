@@ -3,13 +3,36 @@ import type { Metadata } from "next";
 import { Truck, Clock, ShieldCheck, Globe } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config/site";
 
-import { buildBreadcrumbSchema } from "@/lib/seo";
+import { buildBreadcrumbSchema, buildFAQPageSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Shipping & Worldwide Delivery Policy",
   description: "Transparent international logistics timelines, customs clearance, free shipping thresholds, and real-time tracking.",
   alternates: {
     canonical: `${SITE_CONFIG.siteUrl}/shipping`,
+    languages: {
+      en: `${SITE_CONFIG.siteUrl}/shipping`,
+      ja: `${SITE_CONFIG.siteUrl}/shipping?lang=ja`,
+      de: `${SITE_CONFIG.siteUrl}/shipping?lang=de`,
+      es: `${SITE_CONFIG.siteUrl}/shipping?lang=es`,
+      fr: `${SITE_CONFIG.siteUrl}/shipping?lang=fr`,
+      "zh-CN": `${SITE_CONFIG.siteUrl}/shipping?lang=zh-CN`,
+      ar: `${SITE_CONFIG.siteUrl}/shipping?lang=ar`,
+      pt: `${SITE_CONFIG.siteUrl}/shipping?lang=pt`,
+      it: `${SITE_CONFIG.siteUrl}/shipping?lang=it`,
+      ko: `${SITE_CONFIG.siteUrl}/shipping?lang=ko`,
+      hi: `${SITE_CONFIG.siteUrl}/shipping?lang=hi`,
+      ru: `${SITE_CONFIG.siteUrl}/shipping?lang=ru`,
+      nl: `${SITE_CONFIG.siteUrl}/shipping?lang=nl`,
+      tr: `${SITE_CONFIG.siteUrl}/shipping?lang=tr`,
+      pl: `${SITE_CONFIG.siteUrl}/shipping?lang=pl`,
+      id: `${SITE_CONFIG.siteUrl}/shipping?lang=id`,
+      vi: `${SITE_CONFIG.siteUrl}/shipping?lang=vi`,
+      th: `${SITE_CONFIG.siteUrl}/shipping?lang=th`,
+      sv: `${SITE_CONFIG.siteUrl}/shipping?lang=sv`,
+      el: `${SITE_CONFIG.siteUrl}/shipping?lang=el`,
+      "x-default": `${SITE_CONFIG.siteUrl}/shipping`,
+    },
   },
   openGraph: {
     title: `Shipping & Worldwide Delivery Policy | ${SITE_CONFIG.brandName}`,
@@ -32,11 +55,30 @@ export default function ShippingPage() {
     { name: "Shipping & Logistics", url: "/shipping" },
   ]);
 
+  const shippingFaqSchema = buildFAQPageSchema([
+    {
+      question: "How long does standard express courier delivery take?",
+      answer: "Orders are processed within 24 to 48 hours and shipped via international air couriers, arriving within 5 to 9 business days.",
+    },
+    {
+      question: "What is the threshold for complimentary free shipping?",
+      answer: `All orders exceeding $${SITE_CONFIG.thresholds.freeShippingUsd}.00 USD qualify for free tracked express delivery worldwide.`,
+    },
+    {
+      question: "How do I track my order once it is shipped?",
+      answer: "A dispatch notification containing your direct courier tracking number will be sent to your email. You can also visit our Track Order page at any time.",
+    },
+  ]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-12">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(shippingFaqSchema) }}
       />
       <div className="text-center space-y-3">
         <span className="text-xs uppercase tracking-widest font-bold text-neutral-500">

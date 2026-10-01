@@ -1,13 +1,46 @@
 import React from "react";
 import Link from "next/link";
-import { ArrowRight, Sparkles, Shield, Compass, Leaf, ArrowUpRight } from "lucide-react";
+import { ArrowRight, Sparkles, Shield, Compass, Leaf, ArrowUpRight, HelpCircle, ChevronDown } from "lucide-react";
 import { getCategories } from "@/lib/db/categories";
 import { getProducts } from "@/lib/db/products";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { SITE_CONFIG } from "@/lib/config/site";
-import { buildItemListSchema } from "@/lib/seo";
+import { buildItemListSchema, buildFAQPageSchema } from "@/lib/seo";
+
+const HOME_FAQS = [
+  {
+    question: "What kind of products does MYCHOICE offer?",
+    answer:
+      "MYCHOICE is a premier online store offering minimalist, award-winning home decor, ergonomic accessories, sustainable daily essentials, kitchenware, and modern lifestyle products sourced directly from verified international manufacturers.",
+  },
+  {
+    question: "How does international shipping and order fulfillment work?",
+    answer:
+      "All orders are fulfilled via direct international express logistics through our automated fulfillment infrastructure. Orders are dispatched within 24–48 hours, with typical air courier transit taking 5–9 business days with door-to-door milestone tracking.",
+  },
+  {
+    question: "What currency are prices listed in and what payment methods are accepted?",
+    answer:
+      "All prices across MYCHOICE are displayed strictly in US Dollars ($ USD). We support ultra-secure 256-bit SSL encrypted checkout through Cashfree Payments, accepting all major Credit Cards, Debit Cards, Net Banking, and digital wallets.",
+  },
+  {
+    question: "How can I track my shipment after placing an order?",
+    answer:
+      "Once your order is dispatched by our logistics carrier, you will receive an automatic email containing your carrier tracking number. You can also monitor your live delivery status anytime by visiting our Track Order page.",
+  },
+  {
+    question: "What is MYCHOICE's return and cancellation policy?",
+    answer:
+      "To maintain direct-from-manufacturer efficiency and transparent low prices, all sales on MYCHOICE are final upon payment confirmation. We do not accept returns, cancellations, or exchanges once an order is submitted to fulfillment.",
+  },
+  {
+    question: "How can I contact customer support if I have any questions?",
+    answer:
+      "Our customer experience team is available to assist you with order inquiries, tracking updates, and delivery questions. You can contact us 24/7 via email at mychoiceteam.com@gmail.com.",
+  },
+];
 
 export default async function HomePage() {
   const [categories, { products: allProducts }] = await Promise.all([
@@ -19,6 +52,7 @@ export default async function HomePage() {
   const bestSellers = allProducts.filter((p) => p.bestseller).slice(0, 4);
   const newArrivals = allProducts.filter((p) => p.newArrival).slice(0, 4);
   const featuredSchema = buildItemListSchema(featuredProducts, "Featured Curated Essentials", "/");
+  const faqSchema = buildFAQPageSchema(HOME_FAQS);
 
   return (
     <div className="space-y-24 sm:space-y-32 pb-24">
@@ -26,6 +60,10 @@ export default async function HomePage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(featuredSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
       />
 
       {/* 1. HERO SECTION */}
@@ -317,6 +355,49 @@ export default async function HomePage() {
           {newArrivals.map((product) => (
             <ProductCard key={product.id} product={product} />
           ))}
+        </div>
+      </section>
+
+      {/* 8. FREQUENTLY ASKED QUESTIONS (SEO & BUYER CONFIDENCE) */}
+      <section className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center space-y-3 mb-12">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-neutral-100 dark:bg-neutral-800 text-xs font-semibold text-neutral-600 dark:text-neutral-300">
+            <HelpCircle className="w-3.5 h-3.5 text-brand-gold" />
+            <span>Got Questions?</span>
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-neutral-900 dark:text-white">
+            Frequently Asked Questions
+          </h2>
+          <p className="text-xs sm:text-sm text-neutral-500 max-w-lg mx-auto">
+            Everything you need to know about our products, direct global express logistics, and purchasing experience.
+          </p>
+        </div>
+
+        <div className="space-y-4">
+          {HOME_FAQS.map((faq, idx) => (
+            <details
+              key={idx}
+              className="group border border-neutral-200 dark:border-neutral-800 rounded-2xl bg-white dark:bg-neutral-900 overflow-hidden transition-all duration-200 hover:border-neutral-300 dark:hover:border-neutral-700"
+            >
+              <summary className="flex items-center justify-between p-5 text-sm font-semibold text-neutral-900 dark:text-white cursor-pointer select-none list-none">
+                <span>{faq.question}</span>
+                <ChevronDown className="w-4 h-4 text-neutral-400 group-open:rotate-180 transition-transform shrink-0 ml-4" />
+              </summary>
+              <div className="px-5 pb-5 pt-1 text-xs text-neutral-600 dark:text-neutral-400 leading-relaxed border-t border-neutral-100 dark:border-neutral-800/60">
+                {faq.answer}
+              </div>
+            </details>
+          ))}
+        </div>
+
+        <div className="mt-10 text-center text-xs text-neutral-500">
+          Have more questions? Contact our dedicated support desk at{" "}
+          <a
+            href="mailto:mychoiceteam.com@gmail.com"
+            className="text-brand-gold font-semibold hover:underline"
+          >
+            mychoiceteam.com@gmail.com
+          </a>
         </div>
       </section>
     </div>

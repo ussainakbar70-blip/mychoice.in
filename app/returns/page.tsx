@@ -4,13 +4,36 @@ import Link from "next/link";
 import { AlertCircle, Ban, Truck, Mail, ShieldAlert } from "lucide-react";
 import { SITE_CONFIG } from "@/lib/config/site";
 
-import { buildBreadcrumbSchema } from "@/lib/seo";
+import { buildBreadcrumbSchema, buildFAQPageSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
   title: "Return & Cancellation Policy | Final Sale Guidelines",
   description: "Official Return & Cancellation Policy for MYCHOICE - Automated direct-to-supplier dropshipping fulfillment, no cancellations, and final sale guidelines.",
   alternates: {
     canonical: `${SITE_CONFIG.siteUrl}/returns`,
+    languages: {
+      en: `${SITE_CONFIG.siteUrl}/returns`,
+      ja: `${SITE_CONFIG.siteUrl}/returns?lang=ja`,
+      de: `${SITE_CONFIG.siteUrl}/returns?lang=de`,
+      es: `${SITE_CONFIG.siteUrl}/returns?lang=es`,
+      fr: `${SITE_CONFIG.siteUrl}/returns?lang=fr`,
+      "zh-CN": `${SITE_CONFIG.siteUrl}/returns?lang=zh-CN`,
+      ar: `${SITE_CONFIG.siteUrl}/returns?lang=ar`,
+      pt: `${SITE_CONFIG.siteUrl}/returns?lang=pt`,
+      it: `${SITE_CONFIG.siteUrl}/returns?lang=it`,
+      ko: `${SITE_CONFIG.siteUrl}/returns?lang=ko`,
+      hi: `${SITE_CONFIG.siteUrl}/returns?lang=hi`,
+      ru: `${SITE_CONFIG.siteUrl}/returns?lang=ru`,
+      nl: `${SITE_CONFIG.siteUrl}/returns?lang=nl`,
+      tr: `${SITE_CONFIG.siteUrl}/returns?lang=tr`,
+      pl: `${SITE_CONFIG.siteUrl}/returns?lang=pl`,
+      id: `${SITE_CONFIG.siteUrl}/returns?lang=id`,
+      vi: `${SITE_CONFIG.siteUrl}/returns?lang=vi`,
+      th: `${SITE_CONFIG.siteUrl}/returns?lang=th`,
+      sv: `${SITE_CONFIG.siteUrl}/returns?lang=sv`,
+      el: `${SITE_CONFIG.siteUrl}/returns?lang=el`,
+      "x-default": `${SITE_CONFIG.siteUrl}/returns`,
+    },
   },
   openGraph: {
     title: `Return & Cancellation Policy | ${SITE_CONFIG.brandName}`,
@@ -28,11 +51,30 @@ export default function ReturnsPage() {
     { name: "Return & Cancellation Policy", url: "/returns" },
   ]);
 
+  const returnsFaqSchema = buildFAQPageSchema([
+    {
+      question: "Can I cancel my order after paying?",
+      answer: "No. Orders are programmatically submitted to our automated fulfillment network within seconds of payment capture. Once submitted, orders cannot be cancelled.",
+    },
+    {
+      question: "Can I return an item for a refund?",
+      answer: "All sales on MYCHOICE are final sale. We do not accept returns or offer refunds for change of mind or personal preference.",
+    },
+    {
+      question: "What should I do if an item arrives damaged or defective?",
+      answer: "Please photograph the package and damaged merchandise and email our support desk at mychoiceteam.com@gmail.com within 48 hours of delivery.",
+    },
+  ]);
+
   return (
     <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-20 space-y-12">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(returnsFaqSchema) }}
       />
       {/* Page Header */}
       <div className="text-center space-y-3">

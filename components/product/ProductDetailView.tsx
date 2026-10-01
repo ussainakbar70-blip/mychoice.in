@@ -420,6 +420,37 @@ export function ProductDetailView({ product, relatedProducts }: ProductDetailVie
                 </div>
               )}
             </div>
+
+            {/* Shipping & Final Sale Accordion */}
+            <div>
+              <button
+                onClick={() => toggleAccordion("shipping")}
+                className="w-full py-4 flex items-center justify-between text-xs font-bold uppercase tracking-wider text-neutral-900 dark:text-white"
+              >
+                <span>Shipping, Fulfillment &amp; Final Sale</span>
+                <ChevronDown
+                  className={`w-4 h-4 text-neutral-500 transition-transform ${
+                    activeAccordion === "shipping" ? "rotate-180" : ""
+                  }`}
+                />
+              </button>
+              {activeAccordion === "shipping" && (
+                <div className="pb-4 text-xs text-neutral-600 dark:text-neutral-400 space-y-2 leading-relaxed">
+                  <p>
+                    <strong>Express Dispatch:</strong> Dispatched from international logistics centers within 24–48 hours. Typical air courier transit takes 5–9 business days with continuous online milestone tracking.
+                  </p>
+                  <p>
+                    <strong>Complimentary Shipping:</strong> Orders over $75.00 USD qualify for free tracked express delivery.
+                  </p>
+                  <p>
+                    <strong>Final Sale Notice:</strong> All purchases on MYCHOICE are final sale upon checkout. For courier transit damage or defective arrivals, contact our concierge team at{" "}
+                    <a href="mailto:mychoiceteam.com@gmail.com" className="text-brand-gold hover:underline">
+                      mychoiceteam.com@gmail.com
+                    </a>.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

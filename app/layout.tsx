@@ -7,7 +7,7 @@ import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/cart/CartDrawer";
 import { GoogleTranslateScript } from "@/components/layout/GoogleTranslateScript";
 import { SITE_CONFIG } from "@/lib/config/site";
-import { buildOrganizationSchema, buildWebSiteSchema } from "@/lib/seo";
+import { buildOrganizationSchema, buildWebSiteSchema, buildOnlineStoreSchema } from "@/lib/seo";
 
 export const viewport: Viewport = {
   themeColor: "#0b0f17",
@@ -31,6 +31,10 @@ export const metadata: Metadata = {
     "luxury everyday carry",
     "global express logistics",
     "MYCHOICE store",
+    "buy lifestyle essentials online",
+    "best dropshipping products",
+    "premium everyday carry",
+    "worldwide shipping essentials",
   ],
   authors: [{ name: SITE_CONFIG.brandName, url: SITE_CONFIG.siteUrl }],
   creator: SITE_CONFIG.brandName,
@@ -38,6 +42,29 @@ export const metadata: Metadata = {
   metadataBase: new URL(SITE_CONFIG.siteUrl),
   alternates: {
     canonical: "/",
+    languages: {
+      en: "/",
+      ja: "/?lang=ja",
+      de: "/?lang=de",
+      es: "/?lang=es",
+      fr: "/?lang=fr",
+      "zh-CN": "/?lang=zh-CN",
+      ar: "/?lang=ar",
+      pt: "/?lang=pt",
+      it: "/?lang=it",
+      ko: "/?lang=ko",
+      hi: "/?lang=hi",
+      ru: "/?lang=ru",
+      nl: "/?lang=nl",
+      tr: "/?lang=tr",
+      pl: "/?lang=pl",
+      id: "/?lang=id",
+      vi: "/?lang=vi",
+      th: "/?lang=th",
+      sv: "/?lang=sv",
+      el: "/?lang=el",
+      "x-default": "/",
+    },
   },
   icons: {
     icon: "/favicon.svg",
@@ -92,14 +119,21 @@ export default function RootLayout({
 }>) {
   const orgSchema = buildOrganizationSchema();
   const websiteSchema = buildWebSiteSchema();
+  const onlineStoreSchema = buildOnlineStoreSchema();
 
   return (
     <html lang="en" className="scroll-smooth">
       <head>
-        {/* Core Web Vitals Preconnects */}
+        {/* Core Web Vitals Preconnects & DNS Prefetching */}
         <link rel="preconnect" href="https://images.unsplash.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        {/* Global Organization & WebSite Structured Data */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="dns-prefetch" href="https://translate.google.com" />
+        <link rel="dns-prefetch" href="https://translate.googleapis.com" />
+        <link rel="dns-prefetch" href="https://sdk.cashfree.com" />
+        {/* Global Organization, WebSite & OnlineStore Structured Data */}
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgSchema) }}
@@ -107,6 +141,10 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteSchema) }}
+        />
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(onlineStoreSchema) }}
         />
       </head>
       <body className="min-h-screen flex flex-col bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 antialiased selection:bg-brand-gold selection:text-neutral-950">

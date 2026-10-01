@@ -8,7 +8,7 @@ import { getCategoryBySlug, getCategories } from "@/lib/db/categories";
 import { ProductDetailView } from "@/components/product/ProductDetailView";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SITE_CONFIG } from "@/lib/config/site";
-import { buildProductSchema, buildBreadcrumbSchema } from "@/lib/seo";
+import { buildProductSchema, buildBreadcrumbSchema, buildFAQPageSchema } from "@/lib/seo";
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -38,6 +38,29 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
     ],
     alternates: {
       canonical: canonicalUrl,
+      languages: {
+        en: canonicalUrl,
+        ja: `${canonicalUrl}?lang=ja`,
+        de: `${canonicalUrl}?lang=de`,
+        es: `${canonicalUrl}?lang=es`,
+        fr: `${canonicalUrl}?lang=fr`,
+        "zh-CN": `${canonicalUrl}?lang=zh-CN`,
+        ar: `${canonicalUrl}?lang=ar`,
+        pt: `${canonicalUrl}?lang=pt`,
+        it: `${canonicalUrl}?lang=it`,
+        ko: `${canonicalUrl}?lang=ko`,
+        hi: `${canonicalUrl}?lang=hi`,
+        ru: `${canonicalUrl}?lang=ru`,
+        nl: `${canonicalUrl}?lang=nl`,
+        tr: `${canonicalUrl}?lang=tr`,
+        pl: `${canonicalUrl}?lang=pl`,
+        id: `${canonicalUrl}?lang=id`,
+        vi: `${canonicalUrl}?lang=vi`,
+        th: `${canonicalUrl}?lang=th`,
+        sv: `${canonicalUrl}?lang=sv`,
+        el: `${canonicalUrl}?lang=el`,
+        "x-default": canonicalUrl,
+      },
     },
     openGraph: {
       title,
@@ -99,6 +122,22 @@ export default async function ProductPage({ params }: ProductPageProps) {
     { name: product.name, url: `/product/${product.slug}` },
   ]);
 
+  const productFaqs = [
+    {
+      question: `How long does shipping take for the ${product.name}?`,
+      answer: `Orders for the ${product.name} are dispatched within 24 to 48 hours and shipped via express courier air logistics, typically arriving within 5 to 9 business days with continuous online tracking.`,
+    },
+    {
+      question: `What is the return and final sale policy for ${product.name}?`,
+      answer: `To offer direct manufacturer pricing, all purchases on MYCHOICE are final sale upon checkout. In the event that your ${product.name} arrives defective or damaged during transit, our team will assist you when you email mychoiceteam.com@gmail.com with your order details.`,
+    },
+    {
+      question: `What payment options are accepted for ${product.name}?`,
+      answer: `We process payments exclusively in USD ($) via Cashfree's PCI-DSS compliant secure checkout, accepting major Credit Cards, Debit Cards, Net Banking, and UPI.`,
+    },
+  ];
+  const productFaqSchema = buildFAQPageSchema(productFaqs);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-16">
       {/* Schema.org Structured Data for Google Rich Snippets */}
@@ -109,6 +148,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productFaqSchema) }}
       />
 
       {/* Breadcrumb Navigation */}
