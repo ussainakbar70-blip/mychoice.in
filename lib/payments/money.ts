@@ -60,6 +60,19 @@ export function calculatePercentageDiscount(
 }
 
 /**
+ * Formats an amount into localized US Dollar format (e.g. $29.00 or $29).
+ */
+export function formatUSD(amount: number, includeDecimals = true): string {
+  const safeAmount = isNaN(amount) ? 0 : amount;
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: includeDecimals ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(safeAmount);
+}
+
+/**
  * Formats an amount into localized Indian Rupee currency format (e.g. ₹1,299).
  */
 export function formatINR(amount: number, includeDecimals = false): string {

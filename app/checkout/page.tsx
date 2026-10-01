@@ -6,7 +6,6 @@ import Link from "next/link";
 import { ShieldCheck, Lock, Truck, AlertCircle, ArrowLeft, RefreshCw, CheckCircle2 } from "lucide-react";
 import { useCart } from "@/lib/cart/context";
 import { formatMoney } from "@/lib/currency";
-import { formatINR } from "@/lib/payments/money";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { Button } from "@/components/ui/Button";
 import { Logo } from "@/components/ui/Logo";
@@ -599,7 +598,7 @@ function CheckoutContent() {
                       )}
                     </div>
                     <span className="text-xs font-bold text-neutral-900 dark:text-white shrink-0">
-                      {formatINR(item.price * item.quantity)}
+                      {formatMoney(item.price * item.quantity, currency)}
                     </span>
                   </div>
                 ))}
@@ -610,7 +609,7 @@ function CheckoutContent() {
                 <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
                   <span>Subtotal</span>
                   <span className="font-semibold text-neutral-900 dark:text-white">
-                    {formatINR(subtotal)}
+                    {formatMoney(subtotal, currency)}
                   </span>
                 </div>
                 <div className="flex justify-between text-neutral-600 dark:text-neutral-400">
@@ -621,13 +620,13 @@ function CheckoutContent() {
                         FREE
                       </span>
                     ) : (
-                      formatINR(shippingAmount)
+                      formatMoney(shippingAmount, currency)
                     )}
                   </span>
                 </div>
                 <div className="border-t border-neutral-200 dark:border-neutral-800 pt-3 flex justify-between text-sm font-bold text-neutral-900 dark:text-white">
                   <span>Total Due</span>
-                  <span className="text-lg">{formatINR(estimatedTotal)}</span>
+                  <span className="text-lg">{formatMoney(estimatedTotal, currency)}</span>
                 </div>
               </div>
 

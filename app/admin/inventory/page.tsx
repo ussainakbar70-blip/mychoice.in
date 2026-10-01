@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { Boxes, AlertTriangle, RefreshCw, CheckCircle2, Search, SlidersHorizontal } from "lucide-react";
 import { adminGetInventory, adminUpdateInventoryQuantity, InventoryItem } from "@/lib/admin";
@@ -15,7 +15,7 @@ export default function AdminInventoryPage() {
   const [updatingId, setUpdatingId] = useState<string | null>(null);
   const [editValues, setEditValues] = useState<Record<string, number>>({});
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     try {
       const items = await adminGetInventory(threshold);
@@ -28,11 +28,11 @@ export default function AdminInventoryPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [threshold]);
 
   useEffect(() => {
     loadData();
-  }, [threshold]);
+  }, [loadData]);
 
   const handleSaveQuantity = async (variantId: string) => {
     setUpdatingId(variantId);

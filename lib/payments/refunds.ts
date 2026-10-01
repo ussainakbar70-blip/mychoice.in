@@ -95,7 +95,7 @@ export async function processPaymentRefund(
 
   if (params.amount > maxAvailableToRefund) {
     throw new PaymentRefundError(
-      `Requested refund of ₹${params.amount} exceeds remaining refundable balance of ₹${maxAvailableToRefund}.`
+      `Requested refund of $${params.amount} exceeds remaining refundable balance of $${maxAvailableToRefund}.`
     );
   }
 

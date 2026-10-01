@@ -6,7 +6,7 @@ import Link from "next/link";
 import { CheckCircle2, Truck, ArrowRight, ShieldCheck, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { formatINR } from "@/lib/payments/money";
+import { formatUSD } from "@/lib/payments/money";
 import { trackVerifiedPurchase } from "@/lib/analytics";
 
 interface OrderData {
@@ -137,7 +137,7 @@ function CheckoutSuccessContent() {
                   <p className="text-neutral-400 text-[11px]">Qty: {item.quantity}</p>
                 </div>
                 <span className="font-bold text-neutral-900 dark:text-white">
-                  {formatINR(item.totalPrice)}
+                  {formatUSD(item.totalPrice)}
                 </span>
               </div>
             ))}
@@ -147,7 +147,7 @@ function CheckoutSuccessContent() {
           <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 flex justify-between items-center">
             <span className="text-sm font-semibold text-neutral-600 dark:text-neutral-300">Total Paid</span>
             <span className="text-lg font-bold text-neutral-900 dark:text-white">
-              {formatINR(order.totalAmount)}
+              {formatUSD(order.totalAmount)}
             </span>
           </div>
         </div>

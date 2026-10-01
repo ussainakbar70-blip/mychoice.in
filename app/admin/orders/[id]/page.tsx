@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { getOrderSecure, adminUpdateOrderStatus, DetailedOrder } from "@/lib/orders";
 import { formatMoney } from "@/lib/currency";
-import { formatINR } from "@/lib/payments/money";
+import { formatUSD } from "@/lib/payments/money";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 
@@ -205,10 +205,10 @@ export default function AdminOrderDetailPage({ params }: AdminOrderDetailPagePro
                   </div>
                   <div className="text-right">
                     <span className="font-bold text-neutral-900 dark:text-white block">
-                      {formatINR(item.unitPrice * item.quantity)}
+                      {formatUSD(item.unitPrice * item.quantity)}
                     </span>
                     <span className="text-[11px] text-neutral-400">
-                      Qty {item.quantity} × {formatINR(item.unitPrice)}
+                      Qty {item.quantity} × {formatUSD(item.unitPrice)}
                     </span>
                   </div>
                 </div>
@@ -219,23 +219,23 @@ export default function AdminOrderDetailPage({ params }: AdminOrderDetailPagePro
             <div className="pt-4 border-t border-neutral-100 dark:border-neutral-800 space-y-1.5 text-xs text-neutral-500">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>{formatINR(order.subtotal)}</span>
+                <span>{formatUSD(order.subtotal)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Discount</span>
-                <span>-{formatINR(order.discountAmount)}</span>
+                <span>-{formatUSD(order.discountAmount)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>{formatINR(order.shippingAmount)}</span>
+                <span>{formatUSD(order.shippingAmount)}</span>
               </div>
               <div className="flex justify-between">
                 <span>Tax</span>
-                <span>{formatINR(order.taxAmount)}</span>
+                <span>{formatUSD(order.taxAmount)}</span>
               </div>
               <div className="flex justify-between pt-2 border-t border-neutral-200 dark:border-neutral-700 text-sm font-bold text-neutral-900 dark:text-white">
                 <span>Grand Total</span>
-                <span className="text-brand-gold">{formatINR(order.totalAmount)}</span>
+                <span className="text-brand-gold">{formatUSD(order.totalAmount)}</span>
               </div>
             </div>
           </div>

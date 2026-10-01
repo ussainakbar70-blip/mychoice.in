@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   CreditCard,
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
-import { formatINR } from "@/lib/payments/money";
+import { formatUSD } from "@/lib/payments/money";
 
 interface PaymentItem {
   id: string;
@@ -44,6 +44,7 @@ export default function AdminPaymentsPage() {
   const [payments, setPayments] = useState<PaymentItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [activeSearch, setActiveSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
   // Refund Modal State
@@ -60,11 +61,11 @@ export default function AdminPaymentsPage() {
   const [statusMsg, setStatusMsg] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [reconcilingId, setReconcilingId] = useState<string | null>(null);
 
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {
       const q = new URLSearchParams();
-      if (search) q.set("search", search);
+      if (activeSearch) q.set("search", activeSearch);
       if (statusFilter !== "all") q.set("status", statusFilter);
 
       const res = await fetch(`/api/admin/payments?${q.toString()}`);
@@ -77,15 +78,15 @@ export default function AdminPaymentsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [activeSearch, statusFilter]);
 
   useEffect(() => {
     fetchPayments();
-  }, [statusFilter]);
+  }, [fetchPayments]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    fetchPayments();
+    setActiveSearch(search);
   };
 
   const handleOpenRefund = (payment: PaymentItem) => {
@@ -212,12 +213,12 @@ export default function AdminPaymentsPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm space-y-1">
           <span className="text-[11px] uppercase font-bold text-neutral-400">Total Captured Volume</span>
-          <p className="text-2xl font-bold text-neutral-900 dark:text-white">{formatINR(totalCollected)}</p>
+          <p className="text-2xl font-bold text-neutral-900 dark:text-white">{formatUSD(totalCollected)}</p>
           <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">{capturedCount} Captured Transactions</p>
         </div>
         <div className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm space-y-1">
           <span className="text-[11px] uppercase font-bold text-neutral-400">Total Refunded Volume</span>
-          <p className="text-2xl font-bold text-neutral-900 dark:text-white">{formatINR(totalRefunded)}</p>
+          <p className="text-2xl font-bold text-neutral-900 dark:text-white">{formatUSD(totalRefunded)}</p>
           <p className="text-[11px] text-neutral-500 font-semibold">Processed to Customer Source</p>
         </div>
         <div className="p-5 rounded-2xl bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800 shadow-sm space-y-1">
@@ -311,7 +312,7 @@ export default function AdminPaymentsPage() {
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-bold text-neutral-900 dark:text-white whitespace-nowrap">
-                      {formatINR(p.amount)}
+                      {formatUSD(p.amount)}
                     </td>
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       <Badge
@@ -397,16 +398,16 @@ export default function AdminPaymentsPage() {
               <div className="p-3 rounded-xl bg-neutral-50 dark:bg-neutral-800/50 space-y-1">
                 <div className="flex justify-between text-neutral-500">
                   <span>Captured Total:</span>
-                  <span className="font-semibold text-neutral-900 dark:text-white">{formatINR(selectedPayment.amount)}</span>
+                  <span className="font-semibold text-neutral-900 dark:text-white">{formatUSD(selectedPayment.amount)}</span>
                 </div>
                 <div className="flex justify-between text-neutral-500">
                   <span>Prior Refunds:</span>
-                  <span className="font-semibold text-neutral-900 dark:text-white">{formatINR(selectedPayment.refundAmount)}</span>
+                  <span className="font-semibold text-neutral-900 dark:text-white">{formatUSD(selectedPayment.refundAmount)}</span>
                 </div>
                 <div className="flex justify-between text-neutral-700 dark:text-neutral-300 font-bold border-t border-neutral-200 dark:border-neutral-700 pt-1">
                   <span>Max Refundable:</span>
                   <span className="text-emerald-600 dark:text-emerald-400">
-                    {formatINR(selectedPayment.amount - selectedPayment.refundAmount)}
+                    {formatUSD(selectedPayment.amount - selectedPayment.refundAmount)}
                   </span>
                 </div>
               </div>
@@ -490,7 +491,7 @@ export default function AdminPaymentsPage() {
               <div className="grid grid-cols-2 gap-2 p-3 bg-neutral-50 dark:bg-neutral-800/40 rounded-xl">
                 <div>
                   <span className="text-neutral-400">Amount:</span>
-                  <p className="font-bold">{formatINR(selectedPayment.amount)}</p>
+                  <p className="font-bold">{formatUSD(selectedPayment.amount)}</p>
                 </div>
                 <div>
                   <span className="text-neutral-400">Status:</span>

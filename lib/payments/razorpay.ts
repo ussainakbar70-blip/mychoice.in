@@ -115,7 +115,7 @@ export class RazorpayPaymentProvider implements PaymentProvider {
       const actualMinor = toPaise(payment.amount);
       if (actualMinor !== expectedMinor) {
         throw new PaymentVerificationError(
-          `Payment amount mismatch: expected ₹${params.expectedAmount} but gateway captured ₹${payment.amount}`
+          `Payment amount mismatch: expected $${params.expectedAmount} but gateway captured $${payment.amount}`
         );
       }
     }

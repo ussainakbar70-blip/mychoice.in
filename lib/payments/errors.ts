@@ -33,7 +33,7 @@ export class PaymentVerificationError extends PaymentError {
 export class PaymentAmountMismatchError extends PaymentError {
   constructor(clientAmount: number, serverAmount: number) {
     super(
-      `Price validation mismatch detected. Server recalculated total is ₹${serverAmount}, received ₹${clientAmount}.`,
+      `Price validation mismatch detected. Server recalculated total is $${serverAmount}, received $${clientAmount}.`,
       "PAYMENT_AMOUNT_MISMATCH",
       400,
       true
