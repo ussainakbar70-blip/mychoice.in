@@ -2,8 +2,9 @@
 
 import React from "react";
 import Link from "next/link";
-import { X, ChevronRight, ShoppingBag, ShieldCheck, Truck, HelpCircle } from "lucide-react";
-import { CATEGORIES } from "@/lib/db/seed-data";
+import { X, ChevronRight, ShoppingBag, ShieldCheck, Truck, Heart, User } from "lucide-react";
+import { CATEGORIES, SeedCategory } from "@/lib/db/seed-data";
+import { getCategories } from "@/lib/db/categories";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { Logo } from "@/components/ui/Logo";
 import { CurrencySelector } from "./CurrencySelector";
@@ -11,9 +12,20 @@ import { CurrencySelector } from "./CurrencySelector";
 interface MobileMenuProps {
   isOpen: boolean;
   onClose: () => void;
+  categories?: SeedCategory[];
 }
 
-export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
+export function MobileMenu({ isOpen, onClose, categories: propCategories }: MobileMenuProps) {
+  const [categories, setCategories] = React.useState<SeedCategory[]>(propCategories || CATEGORIES);
+
+  React.useEffect(() => {
+    if (!propCategories) {
+      getCategories().then(setCategories).catch(console.error);
+    } else {
+      setCategories(propCategories);
+    }
+  }, [propCategories]);
+
   if (!isOpen) return null;
 
   return (
@@ -45,7 +57,7 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
               Curated Collections
             </span>
             <div className="mt-3 space-y-1">
-              {CATEGORIES.map((cat) => (
+              {categories.map((cat) => (
                 <Link
                   key={cat.id}
                   href={`/category/${cat.slug}`}
@@ -56,6 +68,36 @@ export function MobileMenu({ isOpen, onClose }: MobileMenuProps) {
                   <ChevronRight className="w-4 h-4 text-neutral-400" />
                 </Link>
               ))}
+            </div>
+          </div>
+
+          <div className="border-t border-neutral-100 dark:border-neutral-800 pt-5 mb-6">
+            <span className="text-[11px] font-bold tracking-widest uppercase text-neutral-400">
+              Account &amp; Wishlist
+            </span>
+            <div className="mt-3 space-y-1">
+              <Link
+                href="/account"
+                onClick={onClose}
+                className="flex items-center justify-between py-2 text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <User className="w-4 h-4 text-neutral-400" />
+                  <span>Client Account</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-neutral-400" />
+              </Link>
+              <Link
+                href="/wishlist"
+                onClick={onClose}
+                className="flex items-center justify-between py-2 text-sm font-medium text-neutral-800 dark:text-neutral-200 hover:text-neutral-950 dark:hover:text-white transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <Heart className="w-4 h-4 text-neutral-400" />
+                  <span>My Wishlist</span>
+                </div>
+                <ChevronRight className="w-4 h-4 text-neutral-400" />
+              </Link>
             </div>
           </div>
 

@@ -1,7 +1,7 @@
-# MYCHOICE.in — Premium Custom Dropshipping Storefront & CJdropshipping Fulfillment Engine
+# MYCHOICE.in — Modern Full-Stack Ecommerce System & Admin Console
 
-> **A custom-built, production-grade ecommerce brand engineered from scratch.**  
-> Completely independent of WordPress, WooCommerce, and Shopify. Directly integrated with official **CJdropshipping Open API v2.0** and backed by **Supabase PostgreSQL**.
+> **A custom-built, production-grade ecommerce platform engineered from scratch.**  
+> Built with Next.js 15 App Router, React 19, Tailwind CSS, and Supabase PostgreSQL.
 
 ---
 
@@ -11,6 +11,7 @@
 - **Architectural Minimalism**: Deep obsidian and alabaster neutrals with champagne gold accents.
 - **Curated Intentionality**: 8 focused collections with high-resolution editorial presentation.
 - **Financial & Operational Security**: Authoritative server pricing, double-submit idempotency tokens, and zero client-side secret exposure.
+- **Data Integrity**: Supabase as the source of truth, authentic metrics without fake numbers, and real empty states.
 
 ---
 
@@ -18,10 +19,10 @@
 
 | Layer | Technology |
 | :--- | :--- |
-| **Storefront & Backend** | Next.js 15 (App Router, Server Actions, API Routes), React 19, TypeScript |
-| **Styling & Design System** | Tailwind CSS, Lucide Icons, Custom Vector SVG Brand Mark |
-| **Database & Auth** | Supabase PostgreSQL 15+ (26 Relational Tables, Foreign Keys, Indexes, RLS) |
-| **Fulfillment Engine** | CJdropshipping Open API v2.0 (`lib/cj/`) with Token Auto-Refresh & HMAC Webhooks |
+| **Storefront & Backend** | Next.js 15 (App Router, Server Components, API Routes), React 19, TypeScript |
+| **Styling & Design System** | Tailwind CSS, Lucide Icons, Custom Luxury Design System |
+| **Database & Auth** | Supabase PostgreSQL 15+ (27 Relational Tables, Foreign Keys, Indexes, RLS) |
+| **State & Business Logic** | Modular service layer (`lib/auth`, `lib/cart`, `lib/products`, `lib/orders`, `lib/coupons`, `lib/admin`) |
 | **Validation & Testing** | Zod (Runtime Schema Validation), Vitest (Automated Unit & Integration Tests) |
 | **Multi-Currency** | Localized formatting across **USD**, **INR**, **EUR**, **GBP**, and **AED** |
 
@@ -31,50 +32,59 @@
 
 ```
 ├── app/                          # Next.js 15 App Router
-│   ├── (storefront)/             # Customer browsing pages
-│   │   ├── page.tsx              # Luxury editorial homepage (Hero, 8 collections, Best Sellers)
-│   │   ├── shop/                 # Master catalog with interactive filters & sorting
-│   │   ├── category/[slug]/      # Dedicated category landing pages
-│   │   ├── product/[slug]/       # Product detail page (Gallery, variants, specs, reviews)
-│   │   ├── cart/                 # Shopping bag with coupon code & threshold progress
-│   │   ├── checkout/             # High-conversion checkout with address autofill
-│   │   ├── order/success/        # Order receipt & confirmation page
-│   │   ├── track-order/          # Live courier milestone tracking timeline
-│   │   ├── account/              # Customer account & order history portal
-│   │   ├── about/                # Brand manifesto & design philosophy
-│   │   ├── shipping/             # International shipping & courier policy
-│   │   ├── returns/              # 30-day effortless returns policy
-│   │   ├── privacy/ & terms/     # Legal terms & compliance policies
-│   │   └── contact/              # Client concierge contact form
+│   ├── page.tsx                  # Luxury editorial homepage (Hero, 8 collections, Best Sellers)
+│   ├── shop/                     # Master catalog with interactive filters & sorting
+│   ├── products/                 # Product catalog route
+│   │   └── [slug]/               # Product detail page (Gallery, variants, specs, reviews)
+│   ├── category/[slug]/          # Dedicated category landing pages
+│   ├── search/                   # Dedicated search page (/search?q=...) with query sync
+│   ├── cart/                     # Shopping bag with coupon code & threshold progress
+│   ├── checkout/                 # Authoritative server-side checkout with address capture
+│   ├── order/success/[orderId]/  # Secure order confirmation page
+│   ├── wishlist/                 # Wishlist with move-to-bag functionality
+│   ├── login/                    # Customer authentication login
+│   ├── register/                 # Customer registration
+│   ├── forgot-password/          # Password recovery request
+│   ├── reset-password/           # Password update
+│   ├── account/                  # Customer portal with profile editor & saved addresses
+│   │   └── orders/               # Customer order history & invoices (/account/orders/[id])
 │   ├── admin/                    # Secure Admin Management Portal
-│   │   ├── page.tsx              # Operations dashboard (Revenue, orders, CJ telemetry)
-│   │   ├── products/             # Product manager + Unit Economics Profit Calculator
-│   │   ├── cj/products/          # CJdropshipping catalog explorer & draft importer
-│   │   ├── orders/               # Order pipeline manager & fulfillment dispatcher
-│   │   ├── integrations/cj/      # Real-time CJ API v2 health & diagnostics
-│   │   └── settings/             # Store configuration & infrastructure health matrix
-│   ├── api/                      # Serverless API routes
-│   │   ├── checkout/route.ts     # Authoritative server pricing & idempotency guard
-│   │   ├── orders/route.ts       # Order status & milestone checkpoints
-│   │   └── webhooks/cj/route.ts  # HMAC-SHA256 authenticated webhook listener
+│   │   ├── page.tsx              # Operations dashboard (Authentic revenue, order status counts)
+│   │   ├── products/             # Product manager + create (/new) & edit (/[id])
+│   │   ├── categories/           # Category manager with orphan protection & reordering
+│   │   ├── inventory/            # Inventory matrix with low-stock deficit indicators
+│   │   ├── orders/               # Order pipeline manager & fulfillment details (/[id])
+│   │   ├── customers/            # Customer directory & customer file (/[id])
+│   │   ├── coupons/              # Coupon management & toggles
+│   │   ├── reviews/              # Review moderation queue (approve/reject/delete)
+│   │   ├── settings/             # Store configuration & infrastructure health matrix
+│   │   └── audit/                # Chronological audit logs of administrative actions
+│   └── api/                      # Server API routes
+│       ├── checkout/route.ts     # Authoritative server pricing & idempotency guard
+│       ├── orders/route.ts       # Order status & milestone checkpoints
+│       └── webhooks/cj/route.ts  # HMAC-SHA256 authenticated webhook listener
 ├── components/                   # Modular UI components
-│   ├── ui/                       # Logo, Button, Badge, Modal primitives
+│   ├── ui/                       # Button, Badge, Modal, Input primitives
 │   ├── layout/                   # Header, AnnouncementBar, Navbar, Footer, MobileMenu
-│   ├── product/                  # ProductCard, ProductDetailView, CatalogView
+│   ├── product/                  # ProductCard, ProductDetailView, ProductCatalogView
 │   ├── cart/                     # Slide-over mini-cart drawer
 │   └── search/                   # Instant search modal with keyboard navigation
 ├── lib/                          # Core business logic & integrations
-│   ├── cj/                       # Dedicated CJdropshipping API v2 client & mock adapter
-│   ├── currency/                 # Multi-currency conversions & localized formatters
+│   ├── admin/                    # Admin metrics, inventory updates, and audit queries
+│   ├── auth/                     # Supabase Auth client, session persistence, role checks
+│   ├── cart/                     # Cart service, authoritative price recalculation, guest merge
+│   ├── categories/               # Category CRUD and orphan product validation
+│   ├── coupons/                  # Server-side coupon verification and calculations
+│   ├── customers/                # Customer profile and address book management
+│   ├── db/                       # Supabase client, queries, local fallback store, seed data
+│   ├── orders/                   # Authoritative order creation, status transitions, audit logs
 │   ├── pricing/                  # Authoritative pricing & admin profit calculator
-│   ├── payments/                 # PaymentProvider interface & development sandbox adapter
-│   ├── validation/               # Zod runtime schemas
-│   ├── config/                   # Site settings & threshold parameters
-│   └── db/                       # Supabase client & in-memory local data store
+│   ├── products/                 # Product CRUD, sanitization (stripping internal cost), SEO
+│   └── reviews/                  # Review submission and admin moderation workflows
 ├── supabase/                     # PostgreSQL Migrations & Seed Data
-│   ├── migrations/               # 20260926000001_initial_schema.sql, 20260926000002_rls.sql
-│   └── seed.sql                  # 8 store categories, 24 demo products, coupons, settings
-├── tests/                        # Vitest automated test suite
+│   ├── migrations/               # Versioned migration scripts
+│   └── seed.sql                  # 8 store categories, demo products, coupons, settings
+├── tests/                        # Vitest automated test suite (11 suites, 50+ tests)
 └── docs/                         # Comprehensive architectural & operational manuals
 ```
 
@@ -82,10 +92,8 @@
 
 ## 🚀 Quick Start (Development Mode)
 
-### 1. Clone & Install Dependencies
+### 1. Install Dependencies
 ```bash
-git clone <repo-url>
-cd lively-lavoisier
 npm install
 ```
 
@@ -94,7 +102,7 @@ Copy `.env.example` to `.env.local`:
 ```bash
 cp .env.example .env.local
 ```
-*(The system runs out of the box in zero-config development mode using high-fidelity mock adapters for CJ API and local databases).*
+*(The system runs out of the box in zero-config development mode using high-fidelity fallback stores and local persistence when Supabase credentials are not yet configured).*
 
 ### 3. Run Development Server
 ```bash
@@ -104,43 +112,62 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 
 ---
 
-## 🧪 Testing & Verification
+## 🧪 Testing & Quality Assurance
 
 ```bash
-# Run Vitest automated unit and integration tests
+# Run Vitest automated unit and integration tests (11 test suites)
 npm test
 
-# Run TypeScript strict type verification
+# Run TypeScript strict type verification (0 errors required)
 npm run typecheck
 
-# Run production build
+# Run production build (verifies static rendering of all 42 routes)
 npm run build
 ```
 
 ---
 
-## 📦 Supabase Setup
+## 📦 Supabase Database Architecture & Migration Workflow
 
-When connecting your live Supabase project:
-1. Create a project at [supabase.com](https://supabase.com).
-2. Run the SQL scripts in the Supabase SQL editor:
-   - `supabase/migrations/20260926000001_initial_schema.sql` (Creates 26 tables)
-   - `supabase/migrations/20260926000002_rls_and_security.sql` (Enables Row Level Security)
-   - `supabase/seed.sql` (Seeds 8 collections and initial site settings)
-3. Copy your project URL, anon key, and service role key into `.env.local`.
+This project uses modern Supabase CLI migration workflows to ensure reproducible schema versioning, strict PostgreSQL types, and zero manual production modifications.
+
+### 1. Versioned Database Migrations
+
+Database migrations are located in `supabase/migrations/`:
+- `20260926000001_initial_schema.sql`: Core 26 tables (products, variants, categories, carts, orders, customers, addresses, coupons, reviews, etc.).
+- `20260926000002_rls_and_security.sql`: Row Level Security policies, `is_admin()` security definer function.
+- `20260927000001_ecommerce_foundation_extensions.sql`: External mapping columns (`external_provider`, `external_product_id`, `external_sku`), order status constraints (`pending_payment`, `unfulfilled`, etc.), `decrease_variant_inventory` function, review moderation indexes.
+
+### 2. Migration Commands
+
+```bash
+# Link to remote Supabase project
+npx supabase link --project-ref <your-project-ref>
+
+# Push pending migrations to remote Supabase
+npm run db:push
+
+# Generate updated TypeScript types
+npm run db:types
+```
 
 ---
 
-## 🌐 Custom .IN Domain Deployment
+## 🔐 Security Architecture
 
-Detailed step-by-step setup guides are located in:
-- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- [docs/DATABASE.md](docs/DATABASE.md)
-- [docs/CJ-INTEGRATION.md](docs/CJ-INTEGRATION.md)
-- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)
-- [docs/SECURITY.md](docs/SECURITY.md)
+- **Server-Authoritative Pricing**: The browser never determines product prices, discounts, or order totals. All calculations are executed server-side.
+- **Internal Cost Concealment**: Cost price (`cost_price`) and supplier shipping costs are stripped before product data reaches customer-facing payloads (`sanitizeCustomerProduct`).
+- **Row Level Security (RLS)**: Customers can only query their own profiles, addresses, carts, orders, and wishlists. Admins require `role = 'admin'`.
+- **Order Idempotency**: Checkout requests enforce unique idempotency tokens, preventing double-orders on retries or rapid clicks.
+- **Safe Inventory Handling**: Atomically decrements stock and rejects orders with insufficient stock or non-positive quantities.
+- **Zero Secrets Rule**: `SUPABASE_SERVICE_ROLE_KEY` and third-party supplier secrets are never exposed to browser bundles.
 
 ---
 
-## 🛡️ License
-Private and proprietary. Designed and engineered for **MYCHOICE.in**.
+## 🌐 Documentation Directory
+
+- [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): Multi-tier application architecture and data flows.
+- [docs/DATABASE.md](docs/DATABASE.md): Schema reference, tables, constraints, and migration instructions.
+- [docs/SECURITY.md](docs/SECURITY.md): Threat mitigation matrix, RLS policies, and data isolation.
+- [docs/CJ-INTEGRATION.md](docs/CJ-INTEGRATION.md): External fulfillment specifications (Phase 2).
+- [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md): Production hosting and custom domain DNS setup.

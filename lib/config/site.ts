@@ -11,8 +11,8 @@ export const SITE_CONFIG = {
   description: "A premier international lifestyle ecommerce brand offering thoughtfully engineered essentials across home, wellness, accessories, and modern living.",
   siteUrl: process.env.NEXT_PUBLIC_SITE_URL || "https://mychoice.in",
   contact: {
-    email: "concierge@mychoice.in",
-    supportEmail: "support@mychoice.in",
+    email: "mychoiceteam.com@gmail.com",
+    supportEmail: "mychoiceteam.com@gmail.com",
     phone: "+91 800 456 7890",
     hours: "Monday - Friday, 9:00 AM - 6:00 PM IST",
     address: "MYCHOICE Design Labs, Sector 44, Gurugram, Haryana 122003, India",

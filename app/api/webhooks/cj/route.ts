@@ -1,70 +1,64 @@
 import { NextRequest, NextResponse } from "next/server";
 import { verifyCJWebhookSignature, cjWebhookDispatcher } from "@/lib/cj";
-import { dbStore } from "@/lib/db/client";
 
+/**
+ * CJ Dropshipping Webhook Receiver Endpoint
+ * Official API 2.0 Specifications:
+ * - Method: POST (HTTPS)
+ * - Signature Header: 'sign' (or 'x-cj-signature')
+ * - Secret: openId (or CJ_OPEN_ID / CJ_WEBHOOK_SECRET)
+ * - Algorithm: HMAC-SHA256 Base64 on raw body bytes
+ * - SLA: Must respond with HTTP 200 within approximately 3 seconds
+ */
 export async function POST(req: NextRequest) {
   try {
     const rawBody = await req.text();
     const signatureHeader = req.headers.get("sign") || req.headers.get("x-cj-signature");
 
-    // 1. Verify HMAC-SHA256 signature
+    // 1. Verify HMAC-SHA256 Base64 signature on raw bytes
     const isValid = verifyCJWebhookSignature(rawBody, signatureHeader);
     if (!isValid) {
-      console.warn("Unauthorized webhook request rejected: Invalid signature.");
-      return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
+      console.warn("[CJ Webhook] Unauthorized request rejected: Invalid HMAC-SHA256 signature.");
+      return NextResponse.json(
+        { code: 401, result: false, message: "Invalid signature" },
+        { status: 401 }
+      );
     }
 
-    const payload = JSON.parse(rawBody);
-
-    // 2. Enforce Idempotency Guard (Never process same event ID twice)
-    const result = cjWebhookDispatcher.processEvent(payload);
-    if (result.duplicate) {
-      return NextResponse.json({
-        received: true,
-        status: "duplicate_ignored",
-        message: "Event was already processed idempotently.",
-      });
+    let payload: any;
+    try {
+      payload = JSON.parse(rawBody);
+    } catch {
+      return NextResponse.json(
+        { code: 400, result: false, message: "Malformed JSON payload" },
+        { status: 400 }
+      );
     }
 
-    // 3. Process event data on real database records
-    const eventData = payload.data || {};
-    const orderNumber = eventData.orderNumber;
-    const cjOrderId = eventData.orderId;
+    // 2. Validate essential envelope fields
+    if (!payload.messageType && !payload.messageId) {
+      return NextResponse.json(
+        { code: 400, result: false, message: "Missing required webhook envelope fields" },
+        { status: 400 }
+      );
+    }
 
-    if (orderNumber) {
-      const order = dbStore.getOrderByNumber(orderNumber);
-      if (order) {
-        if (eventData.orderStatus) {
-          dbStore.updateOrder(order.id, {
-            fulfillmentStatus:
-              eventData.orderStatus === "SHIPPED"
-                ? "shipped"
-                : eventData.orderStatus === "DELIVERED"
-                ? "delivered"
-                : "cj_processing",
-          });
-        }
-        if (eventData.trackingNumber) {
-          dbStore.updateOrder(order.id, {
-            trackingNumber: eventData.trackingNumber,
-            trackingUrl:
-              eventData.trackingUrl ||
-              `https://www.17track.net/en/track?nums=${eventData.trackingNumber}`,
-            fulfillmentStatus: "shipped",
-          });
-        }
-      }
+    // 3. Process event safely & idempotently
+    try {
+      await cjWebhookDispatcher.processEvent(payload);
+    } catch (err: unknown) {
+      console.error("[CJ Webhook] Processing error:", err);
     }
 
     return NextResponse.json({
-      received: true,
-      status: "processed",
-      action: result.action,
+      code: 200,
+      result: true,
+      message: "success",
     });
   } catch (err: unknown) {
-    console.error("CJ Webhook processing error:", err);
+    console.error("[CJ Webhook] Ingestion error:", err);
     return NextResponse.json(
-      { error: "Webhook processing error" },
+      { code: 500, result: false, message: "Webhook ingestion failure" },
       { status: 500 }
     );
   }

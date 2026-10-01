@@ -27,7 +27,7 @@ describe("Security Architecture & Fraud Prevention", () => {
     expect(totals.subtotal).not.toBe(maliciousClientPrice);
   });
 
-  it("prevents duplicate webhook processing via idempotent event deduplication", () => {
+  it("prevents duplicate webhook processing via idempotent event deduplication", async () => {
     const dispatcher = new CJWebhookDispatcher();
     const eventId = "evt_cj_test_security_9981";
 
@@ -38,12 +38,12 @@ describe("Security Architecture & Fraud Prevention", () => {
       data: { orderId: "CJ-ORD-1234", orderStatus: "PROCESSING" },
     };
 
-    const run1 = dispatcher.processEvent(payload);
+    const run1 = await dispatcher.processEvent(payload);
     expect(run1.duplicate).toBe(false);
     expect(run1.handled).toBe(true);
 
     // Replay attack / duplicate delivery
-    const run2 = dispatcher.processEvent(payload);
+    const run2 = await dispatcher.processEvent(payload);
     expect(run2.duplicate).toBe(true);
     expect(run2.handled).toBe(false);
   });

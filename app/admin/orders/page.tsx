@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import {
   Package,
@@ -12,18 +12,41 @@ import {
   Clock,
   Send,
 } from "lucide-react";
-import { dbStore, StoredOrder } from "@/lib/db/client";
+import { DetailedOrder, adminUpdateOrderStatus } from "@/lib/orders";
 import { formatMoney } from "@/lib/currency";
 import { cjService } from "@/lib/cj";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState<StoredOrder[]>(dbStore.getAllOrders());
+  const [orders, setOrders] = useState<DetailedOrder[]>([]);
+  const [loading, setLoading] = useState(true);
   const [syncingOrderId, setSyncingOrderId] = useState<string | null>(null);
-  const [selectedOrder, setSelectedOrder] = useState<StoredOrder | null>(null);
+  const [selectedOrder, setSelectedOrder] = useState<DetailedOrder | null>(null);
 
-  const handleSyncToCJ = async (order: StoredOrder) => {
+  const fetchOrders = useCallback(async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/admin/orders");
+      const data = await res.json();
+      if (res.ok && data.success && Array.isArray(data.orders)) {
+        setOrders(data.orders);
+        setSelectedOrder((prev) =>
+          prev ? data.orders.find((o: DetailedOrder) => o.id === prev.id) || null : null
+        );
+      }
+    } catch (err) {
+      console.error("Failed to load admin orders:", err);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
+  const handleSyncToCJ = async (order: DetailedOrder) => {
     setSyncingOrderId(order.id);
     try {
       const cjProducts = order.items
@@ -48,11 +71,10 @@ export default function AdminOrdersPage() {
       });
 
       if (res.code === 200 && res.data?.orderId) {
-        dbStore.updateOrder(order.id, {
-          cjOrderId: res.data.orderId,
+        await adminUpdateOrderStatus(order.id, {
           fulfillmentStatus: "awaiting_cj_payment",
         });
-        setOrders(dbStore.getAllOrders());
+        await fetchOrders();
       }
     } catch (err) {
       console.error("Manual CJ sync failed:", err);
@@ -61,17 +83,14 @@ export default function AdminOrdersPage() {
     }
   };
 
-  const handleMarkShipped = (order: StoredOrder) => {
+  const handleMarkShipped = async (order: DetailedOrder) => {
     const mockTracking = `CJTRK${Date.now().toString().substring(6)}`;
-    dbStore.updateOrder(order.id, {
+    await adminUpdateOrderStatus(order.id, {
       fulfillmentStatus: "shipped",
       trackingNumber: mockTracking,
       trackingUrl: `https://www.17track.net/en/track?nums=${mockTracking}`,
     });
-    setOrders(dbStore.getAllOrders());
-    if (selectedOrder?.id === order.id) {
-      setSelectedOrder(dbStore.getOrderById(order.id) || null);
-    }
+    await fetchOrders();
   };
 
   return (
@@ -89,7 +108,8 @@ export default function AdminOrdersPage() {
         <Button
           variant="outline"
           size="sm"
-          onClick={() => setOrders(dbStore.getAllOrders())}
+          isLoading={loading}
+          onClick={fetchOrders}
           leftIcon={<RefreshCw className="w-3.5 h-3.5" />}
         >
           Refresh Queue

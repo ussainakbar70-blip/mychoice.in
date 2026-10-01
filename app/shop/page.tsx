@@ -1,6 +1,7 @@
 import React from "react";
 import type { Metadata } from "next";
-import { CATEGORIES, DEMO_PRODUCTS } from "@/lib/db/seed-data";
+import { getCategories } from "@/lib/db/categories";
+import { getProducts } from "@/lib/db/products";
 import { ProductCatalogView } from "@/components/product/ProductCatalogView";
 
 export const metadata: Metadata = {
@@ -8,7 +9,12 @@ export const metadata: Metadata = {
   description: "Browse the complete collection of award-winning lifestyle, kitchen, technology, and wellness objects.",
 };
 
-export default function ShopPage() {
+export default async function ShopPage() {
+  const [categories, { products }] = await Promise.all([
+    getCategories(),
+    getProducts({ status: "published", limit: 50 }),
+  ]);
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16">
       {/* Page Header */}
@@ -25,8 +31,8 @@ export default function ShopPage() {
       </div>
 
       <ProductCatalogView
-        initialProducts={DEMO_PRODUCTS}
-        categories={CATEGORIES}
+        initialProducts={products}
+        categories={categories}
       />
     </div>
   );

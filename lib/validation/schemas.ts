@@ -19,7 +19,12 @@ export const OrderItemInputSchema = z.object({
 });
 
 export const CheckoutRequestSchema = z.object({
-  email: z.string().email("Please provide a valid email address"),
+  email: z
+    .string()
+    .email("Please provide a valid email address")
+    .optional()
+    .or(z.literal(""))
+    .nullable(),
   shippingAddress: ShippingAddressSchema,
   billingAddress: ShippingAddressSchema.optional(),
   items: z.array(OrderItemInputSchema).min(1, "At least one item is required to checkout"),

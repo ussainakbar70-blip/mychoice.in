@@ -78,6 +78,17 @@ export class CJMockProvider {
         sellPrice: found.variants[0]?.costPrice || 15.0,
         sourceFrom: 1,
         createTime: "2026-01-01 00:00:00",
+        variants: found.variants.map((v) => ({
+          vid: v.cjVariantId,
+          pid: found.cjProductId,
+          variantSku: v.sku,
+          variantName: `${v.option1Name || "Option"}: ${v.option1Value || "Default"}`,
+          variantPrice: v.costPrice,
+          variantStandard: v.option1Value || "Standard",
+          variantWeight: v.weight,
+          variantVolume: 100,
+          inventory: v.inventoryQuantity,
+        })),
       },
     };
   }

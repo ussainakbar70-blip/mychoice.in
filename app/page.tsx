@@ -1,16 +1,22 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowRight, Sparkles, Shield, Compass, Leaf, ArrowUpRight } from "lucide-react";
-import { CATEGORIES, DEMO_PRODUCTS } from "@/lib/db/seed-data";
+import { getCategories } from "@/lib/db/categories";
+import { getProducts } from "@/lib/db/products";
 import { ProductCard } from "@/components/product/ProductCard";
 import { Button } from "@/components/ui/Button";
 import { Badge } from "@/components/ui/Badge";
 import { SITE_CONFIG } from "@/lib/config/site";
 
-export default function HomePage() {
-  const featuredProducts = DEMO_PRODUCTS.filter((p) => p.featured).slice(0, 4);
-  const bestSellers = DEMO_PRODUCTS.filter((p) => p.bestseller).slice(0, 4);
-  const newArrivals = DEMO_PRODUCTS.filter((p) => p.newArrival).slice(0, 4);
+export default async function HomePage() {
+  const [categories, { products: allProducts }] = await Promise.all([
+    getCategories(),
+    getProducts({ status: "published", limit: 50 }),
+  ]);
+
+  const featuredProducts = allProducts.filter((p) => p.featured).slice(0, 4);
+  const bestSellers = allProducts.filter((p) => p.bestseller).slice(0, 4);
+  const newArrivals = allProducts.filter((p) => p.newArrival).slice(0, 4);
 
   return (
     <div className="space-y-24 sm:space-y-32 pb-24">
@@ -97,7 +103,7 @@ export default function HomePage() {
         </div>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
-          {CATEGORIES.map((category) => (
+          {categories.map((category) => (
             <Link
               key={category.id}
               href={`/category/${category.slug}`}

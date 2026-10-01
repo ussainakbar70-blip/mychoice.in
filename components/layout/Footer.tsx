@@ -53,9 +53,9 @@ export function Footer() {
               <RefreshCw className="w-5 h-5" />
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-white">30-Day Hassle-Free Returns</h4>
+              <h4 className="text-sm font-semibold text-white">Direct Supplier Dispatch</h4>
               <p className="text-xs text-neutral-400 mt-1">
-                Concierge return processing with straightforward store credit or prompt refunds.
+                Automated order routing directly from certified global logistics hubs with live tracking.
               </p>
             </div>
           </div>
@@ -116,7 +116,7 @@ export function Footer() {
               </li>
               <li>
                 <Link href="/returns" className="hover:text-white transition-colors">
-                  Returns & Exchanges
+                  Return &amp; Cancellation Policy
                 </Link>
               </li>
               <li>

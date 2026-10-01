@@ -1,13 +1,21 @@
 import { cjAuthManager } from "./auth";
 import { cjMockProvider } from "./mock";
-import { getCJProducts, getCJProductDetail, CJProductSearchParams } from "./products";
-import { createCJOrder, getCJOrderDetail } from "./orders";
-import { calculateCJFreight, getCJTracking, CJFreightParams } from "./logistics";
-import { verifyCJWebhookSignature, cjWebhookDispatcher } from "./webhooks";
-import { queryCJInventory, syncInventoryInBatches } from "./inventory";
+import { searchCJProducts, getCJProductDetail, importCJProductAsDraft, ImportProductDraftOptions } from "./products";
+import { createCJOrder, confirmCJOrder, getCJOrderDetail, fulfillLocalOrder, canOrderBeFulfilled } from "./orders";
+import { calculateCJFreight, getAvailableShippingMethods, getCJTracking, CJFreightParams } from "./logistics";
+import { verifyCJWebhookSignature, cjWebhookDispatcher, subscribeCJProduct, getCJSubscriptions } from "./webhooks";
+import { queryCJInventory, syncInventoryForMappedVariants } from "./inventory";
 import { getCJVariants, getCJVariantDetail } from "./variants";
 import { validateOrderCJMappings, sanitizeMappingForCustomer } from "./mappings";
-import { CJCreateOrderRequest, CJApiResponse, CJProductListResult, CJProductItem, CJCreateOrderResult, CJOrderDetailResult } from "./types";
+import {
+  CJCreateOrderRequest,
+  CJApiResponse,
+  CJProductListResult,
+  CJProductItem,
+  CJCreateOrderResult,
+  CJOrderDetailResult,
+  CJProductListV2Params,
+} from "./types";
 
 export * from "./types";
 export * from "./auth";
@@ -23,7 +31,10 @@ export * from "./errors";
 export * from "./mock";
 
 export function isCJConfigured(): boolean {
-  return Boolean(process.env.CJ_CLIENT_ID && process.env.CJ_CLIENT_SECRET) || Boolean(process.env.CJ_API_KEY || process.env.CJ_ACCESS_TOKEN);
+  return (
+    Boolean(process.env.CJ_CLIENT_ID && process.env.CJ_CLIENT_SECRET) ||
+    Boolean(process.env.CJ_API_KEY || process.env.CJ_ACCESS_TOKEN)
+  );
 }
 
 export function getCJEnvironmentStatus(): "Connected" | "Development Mock Mode" | "Configuration Required" {
@@ -42,18 +53,20 @@ export function getCJEnvironmentStatus(): "Connected" | "Development Mock Mode" 
  * or cleanly routes to the development mock provider for local sandbox execution.
  */
 export const cjService = {
-  async getProducts(params: CJProductSearchParams = {}): Promise<CJApiResponse<CJProductListResult>> {
-    if (!isCJConfigured() && process.env.NODE_ENV !== "production") {
-      return await cjMockProvider.getProducts(params.pageNum, params.pageSize);
-    }
-    return await getCJProducts(params);
+  async searchProducts(params: CJProductListV2Params = {}): Promise<CJApiResponse<CJProductListResult>> {
+    return await searchCJProducts(params);
+  },
+
+  async getProducts(params: { pageNum?: number; pageSize?: number; productName?: string } = {}): Promise<CJApiResponse<CJProductListResult>> {
+    return await searchCJProducts({ page: params.pageNum, size: params.pageSize, keyword: params.productName });
   },
 
   async getProductDetail(pid: string): Promise<CJApiResponse<CJProductItem>> {
-    if (!isCJConfigured() && process.env.NODE_ENV !== "production") {
-      return await cjMockProvider.getProductDetail(pid);
-    }
     return await getCJProductDetail(pid);
+  },
+
+  async importProductDraft(options: ImportProductDraftOptions) {
+    return await importCJProductAsDraft(options);
   },
 
   async getVariants(params: { pid?: string; vid?: string; sku?: string }) {
@@ -68,8 +81,8 @@ export const cjService = {
     return await queryCJInventory(vids);
   },
 
-  async syncInventory(vids: string[]) {
-    return await syncInventoryInBatches(vids);
+  async syncInventory() {
+    return await syncInventoryForMappedVariants();
   },
 
   async createOrder(request: CJCreateOrderRequest): Promise<CJApiResponse<CJCreateOrderResult>> {
@@ -79,6 +92,10 @@ export const cjService = {
     return await createCJOrder(request);
   },
 
+  async confirmOrder(orderId: string) {
+    return await confirmCJOrder(orderId);
+  },
+
   async getOrderDetail(orderId: string): Promise<CJApiResponse<CJOrderDetailResult>> {
     if (!isCJConfigured() && process.env.NODE_ENV !== "production") {
       return await cjMockProvider.getOrderDetail(orderId);
@@ -86,11 +103,20 @@ export const cjService = {
     return await getCJOrderDetail(orderId);
   },
 
+  async fulfillOrder(orderId: string, options?: { allowTestMode?: boolean; idempotencyKey?: string }) {
+    return await fulfillLocalOrder(orderId, options);
+  },
+
+  async canOrderBeFulfilled(orderId: string) {
+    return await canOrderBeFulfilled(orderId);
+  },
+
   async calculateFreight(params: CJFreightParams) {
-    if (!isCJConfigured() && process.env.NODE_ENV !== "production") {
-      return await cjMockProvider.calculateFreight(params.endCountryCode);
-    }
     return await calculateCJFreight(params);
+  },
+
+  async getShippingMethods(params: CJFreightParams) {
+    return await getAvailableShippingMethods(params);
   },
 
   validateMappings: validateOrderCJMappings,
@@ -98,5 +124,8 @@ export const cjService = {
   getTracking: getCJTracking,
   verifyWebhook: verifyCJWebhookSignature,
   processWebhook: (payload: any) => cjWebhookDispatcher.processEvent(payload),
+  subscribeProduct: subscribeCJProduct,
+  getSubscriptions: getCJSubscriptions,
   getStatus: getCJEnvironmentStatus,
+  getTokenStatus: () => cjAuthManager.getTokenStatus(),
 };

@@ -8,8 +8,20 @@ export default function robots(): MetadataRoute.Robots {
     return {
       rules: {
         userAgent: "*",
-        disallow: "/",
+        allow: "/",
+        disallow: [
+          "/admin",
+          "/admin/*",
+          "/account",
+          "/account/*",
+          "/checkout",
+          "/checkout/*",
+          "/api",
+          "/api/*",
+          "/order/*",
+        ],
       },
+      sitemap: `${SITE_CONFIG.siteUrl}/sitemap.xml`,
     };
   }
 
@@ -17,7 +29,17 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/admin/", "/api/", "/order/success"],
+      disallow: [
+        "/admin",
+        "/admin/*",
+        "/account",
+        "/account/*",
+        "/checkout",
+        "/checkout/*",
+        "/api",
+        "/api/*",
+        "/order/*",
+      ],
     },
     sitemap: `${SITE_CONFIG.siteUrl}/sitemap.xml`,
   };

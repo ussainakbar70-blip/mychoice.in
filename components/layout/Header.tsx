@@ -2,19 +2,25 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Search, ShoppingBag, Menu, Heart, ChevronDown } from "lucide-react";
+import { Search, ShoppingBag, Menu, Heart, User, ChevronDown } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { CurrencySelector } from "./CurrencySelector";
 import { SearchModal } from "@/components/search/SearchModal";
 import { MobileMenu } from "./MobileMenu";
 import { useCart } from "@/lib/cart/context";
-import { CATEGORIES } from "@/lib/db/seed-data";
+import { CATEGORIES, SeedCategory } from "@/lib/db/seed-data";
+import { getCategories } from "@/lib/db/categories";
 
 export function Header() {
   const { itemCount, openCartDrawer } = useCart();
+  const [categories, setCategories] = useState<SeedCategory[]>(CATEGORIES);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCategoriesHovered, setIsCategoriesHovered] = useState(false);
+
+  React.useEffect(() => {
+    getCategories().then(setCategories).catch(console.error);
+  }, []);
 
   return (
     <>
@@ -55,7 +61,7 @@ export function Header() {
 
                 {isCategoriesHovered && (
                   <div className="absolute top-full -left-20 w-[540px] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 p-5 z-50 animate-slide-up grid grid-cols-2 gap-3">
-                    {CATEGORIES.map((cat) => (
+                    {categories.map((cat) => (
                       <Link
                         key={cat.id}
                         href={`/category/${cat.slug}`}
@@ -109,7 +115,7 @@ export function Header() {
               </Link>
             </nav>
 
-            {/* Right: Actions (Search, Currency, Wishlist, Bag) */}
+            {/* Right: Actions (Search, Currency, Wishlist, Account, Bag) */}
             <div className="flex items-center gap-2 sm:gap-3">
               <CurrencySelector className="hidden sm:block" />
 
@@ -122,11 +128,19 @@ export function Header() {
               </button>
 
               <Link
-                href="/account"
+                href="/wishlist"
                 className="p-2 text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors hidden sm:inline-flex"
-                aria-label="Account"
+                aria-label="Wishlist"
               >
                 <Heart className="w-5 h-5" />
+              </Link>
+
+              <Link
+                href="/account"
+                className="p-2 text-neutral-700 dark:text-neutral-300 hover:text-neutral-950 dark:hover:text-white rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition-colors hidden sm:inline-flex"
+                aria-label="Account Portal"
+              >
+                <User className="w-5 h-5" />
               </Link>
 
               {/* Cart Drawer Button */}

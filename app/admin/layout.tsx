@@ -1,30 +1,56 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
+  FolderTree,
   Package,
   ShoppingCart,
-  DownloadCloud,
-  Activity,
+  CreditCard,
+  Users,
+  Boxes,
+  Ticket,
+  MessageSquare,
   Settings,
+  ShieldCheck,
   ArrowLeft,
-  ShieldAlert,
+  FileText,
+  AlertTriangle,
+  Truck,
 } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { Badge } from "@/components/ui/Badge";
+import { getCurrentUser, UserProfile } from "@/lib/auth";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<UserProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function verifyAdmin() {
+      const user = await getCurrentUser();
+      setCurrentUser(user);
+      setLoading(false);
+    }
+    verifyAdmin();
+  }, []);
 
   const navLinks = [
     { label: "Dashboard", href: "/admin", icon: LayoutDashboard },
     { label: "Products Catalog", href: "/admin/products", icon: Package },
+    { label: "Categories Engine", href: "/admin/categories", icon: FolderTree },
     { label: "Orders & Fulfillment", href: "/admin/orders", icon: ShoppingCart },
-    { label: "CJ Product Importer", href: "/admin/cj/products", icon: DownloadCloud },
-    { label: "CJ Integration Health", href: "/admin/integrations/cj", icon: Activity },
+    { label: "Payments & Ledger", href: "/admin/payments", icon: CreditCard },
+    { label: "Customers Directory", href: "/admin/customers", icon: Users },
+    { label: "Inventory & Alerts", href: "/admin/inventory", icon: Boxes },
+    { label: "CJ Dropshipping", href: "/admin/cj", icon: Truck },
+    { label: "Coupons & Discounts", href: "/admin/coupons", icon: Ticket },
+    { label: "Reviews Moderation", href: "/admin/reviews", icon: MessageSquare },
+    { label: "Audit Logs", href: "/admin/audit", icon: FileText },
     { label: "Store Settings", href: "/admin/settings", icon: Settings },
   ];
 
@@ -47,7 +73,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           </Link>
           <div className="w-px h-4 bg-neutral-200 dark:bg-neutral-800" />
           <span className="font-semibold text-neutral-700 dark:text-neutral-300">
-            Lead Operations
+            {currentUser?.fullName || currentUser?.email || "Admin Operator"}
           </span>
         </div>
       </header>
@@ -56,7 +82,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         {/* Sidebar Nav */}
         <aside className="w-full md:w-64 bg-white dark:bg-neutral-900/60 border-r border-neutral-200 dark:border-neutral-800 p-4 space-y-1 shrink-0">
           <div className="px-3 py-2 text-[10px] uppercase font-bold tracking-widest text-neutral-400">
-            Navigation
+            Management Modules
           </div>
           {navLinks.map((item) => {
             const Icon = item.icon;

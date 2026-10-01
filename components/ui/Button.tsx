@@ -1,12 +1,13 @@
 import React from "react";
 import { Loader2 } from "lucide-react";
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: "primary" | "secondary" | "outline" | "ghost" | "gold";
   size?: "sm" | "md" | "lg";
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  asChild?: boolean;
 }
 
 export function Button({
@@ -18,6 +19,7 @@ export function Button({
   rightIcon,
   className = "",
   disabled,
+  asChild = false,
   ...props
 }: ButtonProps) {
   const baseStyles =
@@ -42,9 +44,18 @@ export function Button({
     lg: "text-base px-6 py-3.5 gap-2.5",
   };
 
+  const combinedClass = `${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`;
+
+  if (asChild && React.isValidElement(children)) {
+    const childElement = children as React.ReactElement<any>;
+    return React.cloneElement(childElement, {
+      className: `${combinedClass} ${childElement.props.className || ""}`,
+    });
+  }
+
   return (
     <button
-      className={`${baseStyles} ${variantStyles[variant]} ${sizeStyles[size]} ${className}`}
+      className={combinedClass}
       disabled={disabled || isLoading}
       {...props}
     >

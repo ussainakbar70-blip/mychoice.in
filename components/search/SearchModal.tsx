@@ -2,8 +2,9 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import Link from "next/link";
-import { Search, X, ArrowRight } from "lucide-react";
-import { DEMO_PRODUCTS } from "@/lib/db/seed-data";
+import { Search, X, ArrowRight, Loader2 } from "lucide-react";
+import { SeedProduct } from "@/lib/db/seed-data";
+import { getProducts } from "@/lib/db/products";
 import { useCart } from "@/lib/cart/context";
 import { formatMoney } from "@/lib/currency";
 
@@ -14,6 +15,8 @@ interface SearchModalProps {
 
 export function SearchModal({ isOpen, onClose }: SearchModalProps) {
   const [query, setQuery] = useState("");
+  const [results, setResults] = useState<SeedProduct[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { currency } = useCart();
 
@@ -22,6 +25,7 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
       setTimeout(() => inputRef.current?.focus(), 50);
     } else {
       setQuery("");
+      setResults([]);
     }
   }, [isOpen]);
 
@@ -35,18 +39,35 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  // Debounced live search
+  useEffect(() => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      setResults([]);
+      setIsSearching(false);
+      return;
+    }
 
-  const trimmed = query.trim().toLowerCase();
-  const searchResults = trimmed
-    ? DEMO_PRODUCTS.filter(
-        (p) =>
-          p.name.toLowerCase().includes(trimmed) ||
-          p.shortDescription.toLowerCase().includes(trimmed) ||
-          p.categoryId.toLowerCase().includes(trimmed) ||
-          p.brandName.toLowerCase().includes(trimmed)
-      ).slice(0, 6)
-    : [];
+    setIsSearching(true);
+    const timer = setTimeout(async () => {
+      try {
+        const { products } = await getProducts({
+          search: trimmed,
+          status: "published",
+          limit: 6,
+        });
+        setResults(products);
+      } catch (err) {
+        console.error("Search query error:", err);
+      } finally {
+        setIsSearching(false);
+      }
+    }, 200);
+
+    return () => clearTimeout(timer);
+  }, [query]);
+
+  if (!isOpen) return null;
 
   const popularSearches = [
     "Ultrasonic Diffuser",
@@ -61,45 +82,51 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
     <div className="fixed inset-0 z-50 overflow-y-auto">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-neutral-950/70 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-neutral-950/70 backdrop-blur-sm transition-opacity"
         onClick={onClose}
       />
 
       {/* Modal Dialog */}
-      <div className="relative min-h-screen flex items-start justify-center p-4 sm:pt-20">
+      <div className="min-h-full flex items-start justify-center p-4 pt-16 sm:pt-24">
         <div className="relative w-full max-w-2xl bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden animate-slide-down">
-          {/* Input Box */}
-          <div className="relative flex items-center px-5 border-b border-neutral-200 dark:border-neutral-800">
-            <Search className="w-5 h-5 text-neutral-400 shrink-0" />
+          {/* Search Input Bar */}
+          <div className="flex items-center px-4 py-3.5 border-b border-neutral-200 dark:border-neutral-800">
+            {isSearching ? (
+              <Loader2 className="w-5 h-5 text-neutral-400 animate-spin shrink-0 mr-3" />
+            ) : (
+              <Search className="w-5 h-5 text-neutral-400 shrink-0 mr-3" />
+            )}
             <input
               ref={inputRef}
               type="text"
-              placeholder="Search products, materials, collections..."
+              placeholder="Search across all 8 collections, brands, and SKUs..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full py-4 pl-3 pr-10 text-base text-neutral-900 dark:text-white placeholder:text-neutral-400 bg-transparent focus:outline-none"
+              className="w-full bg-transparent text-sm sm:text-base text-neutral-900 dark:text-white placeholder:text-neutral-400 focus:outline-none"
             />
-            {query ? (
+            {query && (
               <button
                 onClick={() => setQuery("")}
-                className="p-1 rounded-md text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200"
+                className="p-1 rounded-full text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 mr-1"
               >
                 <X className="w-4 h-4" />
               </button>
-            ) : (
-              <span className="text-[10px] uppercase font-semibold text-neutral-400 px-1.5 py-0.5 border border-neutral-200 dark:border-neutral-700 rounded">
-                ESC
-              </span>
             )}
+            <button
+              onClick={onClose}
+              className="text-xs font-semibold px-2 py-1 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
+            >
+              ESC
+            </button>
           </div>
 
           {/* Results Area */}
-          <div className="max-h-[60vh] overflow-y-auto p-5">
-            {trimmed === "" ? (
-              <div>
-                <p className="text-xs uppercase tracking-wider font-semibold text-neutral-400 mb-3">
-                  Trending Searches
-                </p>
+          <div className="p-4 sm:p-6 max-h-[60vh] overflow-y-auto">
+            {query.trim() === "" ? (
+              <div className="space-y-4">
+                <span className="text-xs uppercase tracking-wider font-bold text-neutral-400">
+                  Popular Curations
+                </span>
                 <div className="flex flex-wrap gap-2">
                   {popularSearches.map((term) => (
                     <button
@@ -112,52 +139,70 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                   ))}
                 </div>
               </div>
-            ) : searchResults.length > 0 ? (
+            ) : results.length > 0 ? (
               <div className="space-y-3">
-                <p className="text-xs uppercase tracking-wider font-semibold text-neutral-400 mb-2">
-                  Products ({searchResults.length})
-                </p>
-                {searchResults.map((product) => (
-                  <Link
-                    key={product.id}
-                    href={`/product/${product.slug}`}
-                    onClick={onClose}
-                    className="flex items-center gap-4 p-2.5 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors group"
-                  >
-                    <div className="w-14 h-14 rounded-lg bg-neutral-100 dark:bg-neutral-800 overflow-hidden shrink-0 border border-neutral-200 dark:border-neutral-700">
-                      <img
-                        src={product.images[0]?.publicUrl}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-sm font-medium text-neutral-900 dark:text-white truncate group-hover:text-brand-gold transition-colors">
-                        {product.name}
-                      </h4>
-                      <p className="text-xs text-neutral-500 truncate">
-                        {product.shortDescription}
-                      </p>
-                    </div>
-                    <div className="text-right shrink-0">
-                      <span className="text-sm font-semibold text-neutral-900 dark:text-white">
-                        {formatMoney(product.basePrice, currency)}
-                      </span>
-                    </div>
-                    <ArrowRight className="w-4 h-4 text-neutral-400 group-hover:translate-x-0.5 group-hover:text-neutral-900 dark:group-hover:text-white transition-all shrink-0" />
-                  </Link>
-                ))}
+                <span className="text-xs uppercase tracking-wider font-bold text-neutral-400">
+                  Matches Found ({results.length})
+                </span>
+                <div className="divide-y divide-neutral-100 dark:divide-neutral-800">
+                  {results.map((product) => (
+                    <Link
+                      key={product.id}
+                      href={`/product/${product.slug}`}
+                      onClick={onClose}
+                      className="flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-neutral-50 dark:hover:bg-neutral-800/60 transition-colors group"
+                    >
+                      <div className="w-12 h-12 rounded-lg bg-neutral-100 dark:bg-neutral-800 overflow-hidden shrink-0 border border-neutral-200 dark:border-neutral-700">
+                        <img
+                          src={product.images[0]?.publicUrl}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <span className="text-xs uppercase tracking-wider font-semibold text-neutral-400 block text-[10px]">
+                          {product.brandName}
+                        </span>
+                        <h4 className="text-xs sm:text-sm font-semibold text-neutral-900 dark:text-white truncate group-hover:text-brand-gold transition-colors">
+                          {product.name}
+                        </h4>
+                        <p className="text-[11px] text-neutral-500 truncate">
+                          {product.shortDescription}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-xs sm:text-sm font-bold text-neutral-900 dark:text-white block">
+                          {formatMoney(product.basePrice, currency)}
+                        </span>
+                        <span className="text-[10px] text-brand-gold font-medium flex items-center gap-0.5 justify-end">
+                          <span>View</span>
+                          <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            ) : (
-              <div className="text-center py-8">
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 mb-1">
-                  No products matched &ldquo;<strong>{query}</strong>&rdquo;
-                </p>
-                <p className="text-xs text-neutral-500">
+            ) : !isSearching ? (
+              <div className="py-12 text-center text-neutral-500 space-y-2">
+                <p className="text-sm font-medium">No results found for &ldquo;{query}&rdquo;</p>
+                <p className="text-xs text-neutral-400">
                   Try checking spelling or exploring all 8 store categories.
                 </p>
               </div>
-            )}
+            ) : null}
+          </div>
+
+          {/* Footer note */}
+          <div className="px-6 py-3 bg-neutral-50 dark:bg-neutral-850 border-t border-neutral-200 dark:border-neutral-800 text-[11px] text-neutral-400 flex items-center justify-between">
+            <span>Server-Authoritative Product Search</span>
+            <Link
+              href="/shop"
+              onClick={onClose}
+              className="text-brand-gold hover:underline font-medium"
+            >
+              Browse Full Catalog &rarr;
+            </Link>
           </div>
         </div>
       </div>

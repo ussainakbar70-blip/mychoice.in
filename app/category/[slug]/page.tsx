@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { CATEGORIES, DEMO_PRODUCTS } from "@/lib/db/seed-data";
+import { getCategoryBySlug, getCategories } from "@/lib/db/categories";
+import { getProducts } from "@/lib/db/products";
 import { ProductCatalogView } from "@/components/product/ProductCatalogView";
 
 interface CategoryPageProps {
@@ -12,7 +13,7 @@ interface CategoryPageProps {
 
 export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const category = CATEGORIES.find((c) => c.slug === slug);
+  const category = await getCategoryBySlug(slug);
   if (!category) return { title: "Category Not Found" };
 
   return {
@@ -23,13 +24,16 @@ export async function generateMetadata({ params }: CategoryPageProps): Promise<M
 
 export default async function CategoryPage({ params }: CategoryPageProps) {
   const { slug } = await params;
-  const category = CATEGORIES.find((c) => c.slug === slug);
+  const category = await getCategoryBySlug(slug);
 
   if (!category) {
     notFound();
   }
 
-  const categoryProducts = DEMO_PRODUCTS.filter((p) => p.categoryId === category.id);
+  const [categories, { products: categoryProducts }] = await Promise.all([
+    getCategories(),
+    getProducts({ categoryId: category.id, status: "published", limit: 50 }),
+  ]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-16 space-y-12">
@@ -73,7 +77,7 @@ export default async function CategoryPage({ params }: CategoryPageProps) {
       {/* Filterable Products */}
       <ProductCatalogView
         initialProducts={categoryProducts}
-        categories={CATEGORIES}
+        categories={categories}
         currentCategory={category}
       />
     </div>

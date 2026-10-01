@@ -1,12 +1,13 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Star, ShoppingBag, Heart } from "lucide-react";
 import { SeedProduct } from "@/lib/db/seed-data";
 import { useCart } from "@/lib/cart/context";
 import { formatMoney } from "@/lib/currency";
 import { Badge } from "@/components/ui/Badge";
+import { getWishlistProductIds, toggleWishlistItem } from "@/lib/db/wishlist";
 
 interface ProductCardProps {
   product: SeedProduct;
@@ -15,6 +16,30 @@ interface ProductCardProps {
 
 export function ProductCard({ product }: ProductCardProps) {
   const { addItem, currency } = useCart();
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  useEffect(() => {
+    getWishlistProductIds().then((ids) => {
+      setIsWishlisted(ids.includes(product.id));
+    });
+
+    const handleUpdate = (e: any) => {
+      if (e.detail && Array.isArray(e.detail)) {
+        setIsWishlisted(e.detail.includes(product.id));
+      }
+    };
+
+    window.addEventListener("wishlist_updated", handleUpdate);
+    return () => window.removeEventListener("wishlist_updated", handleUpdate);
+  }, [product.id]);
+
+  const handleWishlistToggle = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const nextState = await toggleWishlistItem(product.id);
+    setIsWishlisted(nextState);
+  };
+
   const primaryImage = product.images.find((img) => img.isPrimary) || product.images[0];
   const secondaryImage = product.images.find((img) => !img.isPrimary);
   const defaultVariant = product.variants[0];
@@ -71,10 +96,23 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
+        {/* Wishlist Button */}
+        <button
+          onClick={handleWishlistToggle}
+          className={`absolute top-3 right-3 p-2 rounded-full backdrop-blur-md transition-all duration-200 z-10 ${
+            isWishlisted
+              ? "bg-rose-50 text-rose-600 dark:bg-rose-950/80 dark:text-rose-400 opacity-100"
+              : "bg-white/80 dark:bg-neutral-900/80 text-neutral-600 dark:text-neutral-400 opacity-0 group-hover:opacity-100 hover:text-rose-600 hover:scale-110"
+          }`}
+          aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+        >
+          <Heart className={`w-3.5 h-3.5 ${isWishlisted ? "fill-rose-500 text-rose-500" : ""}`} />
+        </button>
+
         {/* Quick Add Overlay Button on Hover */}
         <button
           onClick={handleQuickAdd}
-          className="absolute bottom-3 right-3 p-3 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-lg opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:scale-105"
+          className="absolute bottom-3 right-3 p-3 rounded-full bg-neutral-900 text-white dark:bg-white dark:text-neutral-950 shadow-lg opacity-0 translate-y-2 group-hover:opacity-100 group-hover:translate-y-0 transition-all duration-300 hover:scale-105 z-10"
           aria-label="Quick add to bag"
         >
           <ShoppingBag className="w-4 h-4" />

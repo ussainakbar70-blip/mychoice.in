@@ -8,6 +8,7 @@ export interface CJApiResponse<T = unknown> {
   result: boolean;
   message: string;
   data: T;
+  requestId?: string;
 }
 
 export interface CJAccessTokenData {
@@ -24,12 +25,13 @@ export interface CJProductVariant {
   variantSku: string;
   variantName: string;
   variantPrice: number;
-  variantStandard: string;
+  variantStandard?: string;
   variantWeight: number;
-  variantVolume: number;
+  variantVolume?: number;
   variantImage?: string;
   variantKey?: string;
   inventory?: number;
+  warehouse?: string;
 }
 
 export interface CJProductItem {
@@ -38,12 +40,27 @@ export interface CJProductItem {
   productName: string;
   productImage: string;
   productWeight: number;
-  productType: string;
-  categoryName: string;
+  productType?: string;
+  categoryName?: string;
+  categoryId?: string;
   sellPrice: string | number;
-  sourceFrom: number;
-  createTime: string;
+  sourceFrom?: number;
+  createTime?: string;
+  description?: string;
   variants?: CJProductVariant[];
+  warehouseList?: Array<{ warehouseName: string; stock: number }>;
+}
+
+export interface CJProductListV2Params {
+  page?: number;
+  size?: number;
+  keyword?: string;
+  categoryId?: string;
+  startPrice?: number;
+  endPrice?: number;
+  countryCode?: string;
+  sort?: string;
+  features?: string[];
 }
 
 export interface CJProductListResult {
@@ -51,6 +68,25 @@ export interface CJProductListResult {
   pageSize: number;
   total: number;
   list: CJProductItem[];
+}
+
+export interface CJStockQueryItem {
+  vid: string;
+  sku?: string;
+  inventory: number;
+  warehouse?: string;
+  areaId?: string;
+}
+
+export interface CJFreightOption {
+  logisticName: string;
+  logisticPrice: number;
+  logisticAging: string;
+  estimatedDays?: string;
+}
+
+export interface CJFreightResult {
+  logisticList: CJFreightOption[];
 }
 
 export interface CJCreateOrderProduct {
@@ -75,7 +111,7 @@ export interface CJCreateOrderRequest {
   logisticName?: string;
   houseNumber?: string;
   email?: string;
-  payType: 2 | 3; // 2: Direct balance payment, 3: Order only, pay balance later
+  payType: 2 | 3; // 2: Direct balance payment, 3: Create order only (pay balance later)
   products: CJCreateOrderProduct[];
 }
 
@@ -97,21 +133,36 @@ export interface CJOrderDetailResult {
   shippingTime?: string;
   shippedTime?: string;
   deliveryTime?: string;
+  rawStatus?: string;
 }
 
-export interface CJFreightOption {
-  logisticName: string;
-  logisticPrice: number;
-  logisticAging: string;
+export interface CJConfirmOrderRequest {
+  orderId: string;
 }
 
-export interface CJFreightResult {
-  logisticList: CJFreightOption[];
+export interface CJConfirmOrderResult {
+  orderId: string;
+  status: string;
+}
+
+export interface CJTrackingCheckpoint {
+  time: string;
+  status: string;
+  location?: string;
+  description: string;
+}
+
+export interface CJTrackingResult {
+  trackingNumber: string;
+  carrier: string;
+  status: "pending" | "shipped" | "in_transit" | "delivered" | "cancelled";
+  rawStatus: string;
+  checkpoints: CJTrackingCheckpoint[];
 }
 
 export interface CJWebhookPayload {
   openId?: string;
-  messageType: string;
+  messageType: "PRODUCT" | "STOCK" | "ORDER" | "LOGISTICS" | string;
   messageId: string;
   sendTime: number;
   data: {
@@ -126,4 +177,14 @@ export interface CJWebhookPayload {
     inventory?: number;
     [key: string]: unknown;
   };
+}
+
+export interface CJWebhookSubscription {
+  id: string;
+  cjProductId: string;
+  localProductId?: string;
+  topic: "PRODUCT" | "STOCK" | "ORDER" | "LOGISTICS";
+  status: "active" | "paused" | "failed" | "unsubscribed";
+  subscribedAt: string;
+  lastEventAt?: string;
 }

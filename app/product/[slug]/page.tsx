@@ -3,7 +3,8 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronRight } from "lucide-react";
-import { DEMO_PRODUCTS, CATEGORIES } from "@/lib/db/seed-data";
+import { getProductBySlug, getRelatedProducts } from "@/lib/db/products";
+import { getCategoryBySlug, getCategories } from "@/lib/db/categories";
 import { ProductDetailView } from "@/components/product/ProductDetailView";
 import { ProductCard } from "@/components/product/ProductCard";
 import { SITE_CONFIG } from "@/lib/config/site";
@@ -14,7 +15,7 @@ interface ProductPageProps {
 
 export async function generateMetadata({ params }: ProductPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const product = DEMO_PRODUCTS.find((p) => p.slug === slug);
+  const product = await getProductBySlug(slug);
   if (!product) return { title: "Product Not Found" };
 
   return {
@@ -33,16 +34,18 @@ export async function generateMetadata({ params }: ProductPageProps): Promise<Me
 
 export default async function ProductPage({ params }: ProductPageProps) {
   const { slug } = await params;
-  const product = DEMO_PRODUCTS.find((p) => p.slug === slug);
+  const product = await getProductBySlug(slug);
 
   if (!product) {
     notFound();
   }
 
-  const category = CATEGORIES.find((c) => c.id === product.categoryId);
-  const relatedProducts = DEMO_PRODUCTS.filter(
-    (p) => p.categoryId === product.categoryId && p.id !== product.id
-  ).slice(0, 4);
+  const [categories, relatedProducts] = await Promise.all([
+    getCategories(),
+    getRelatedProducts(product.categoryId, product.id, 4),
+  ]);
+
+  const category = categories.find((c) => c.id === product.categoryId);
 
   // Schema.org Structured Data
   const jsonLd = {

@@ -84,6 +84,13 @@ export function getEmailProvider(): EmailProvider {
 
 export const emailService = {
   async send(payload: EmailPayload): Promise<EmailSendResult> {
+    if (!payload.to?.email || !payload.to.email.trim()) {
+      return {
+        success: true,
+        messageId: "skipped_no_email",
+        provider: "skipped",
+      };
+    }
     const provider = getEmailProvider();
     return await provider.sendEmail(payload);
   },
