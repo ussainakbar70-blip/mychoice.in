@@ -3,9 +3,9 @@ import { CheckoutRequestSchema } from "@/lib/validation/schemas";
 import { DEMO_PRODUCTS } from "@/lib/db/seed-data";
 import { calculateOrderTotals, AuthoritativeLineItem } from "@/lib/pricing/calculator";
 import { getPaymentProvider } from "@/lib/payments";
-import { dbStore } from "@/lib/db/client";
-import { cjService } from "@/lib/cj";
+import { dbStore, getSupabaseServerClient, isSupabaseConfigured } from "@/lib/db/client";
 import { emailService } from "@/lib/email";
+import { getProductById } from "@/lib/db/products";
 
 export async function POST(req: NextRequest) {
   try {
@@ -33,24 +33,60 @@ export async function POST(req: NextRequest) {
       notes,
     } = parseResult.data;
 
-    // 2. Check Idempotency Guard (prevent duplicate order creation on double-submit)
-    const existingOrders = dbStore.getAllOrders();
-    const duplicate = existingOrders.find((o) => o.idempotencyKey === idempotencyKey);
-    if (duplicate) {
-      return NextResponse.json({
-        success: true,
-        orderNumber: duplicate.orderNumber,
-        orderId: duplicate.id,
-        isIdempotentReplay: true,
-        redirectUrl: `/order/success?order_number=${duplicate.orderNumber}`,
-      });
+    // 2. Idempotency Guard: prevent duplicate orders caused by retries or double clicks
+    if (idempotencyKey) {
+      const existingOrders = dbStore.getAllOrders();
+      const duplicate = existingOrders.find((o) => o.idempotencyKey === idempotencyKey);
+      if (duplicate) {
+        return NextResponse.json({
+          success: true,
+          orderNumber: duplicate.orderNumber,
+          orderId: duplicate.id,
+          isIdempotentReplay: true,
+          redirectUrl: `/order/success/${duplicate.orderNumber}`,
+        });
+      }
+
+      if (isSupabaseConfigured()) {
+        try {
+          const supabase = getSupabaseServerClient();
+          const { data: dupOrder } = await supabase
+            .from("orders")
+            .select("id, order_number")
+            .eq("idempotency_key", idempotencyKey)
+            .single();
+
+          if (dupOrder) {
+            return NextResponse.json({
+              success: true,
+              orderNumber: dupOrder.order_number,
+              orderId: dupOrder.id,
+              isIdempotentReplay: true,
+              redirectUrl: `/order/success/${dupOrder.order_number}`,
+            });
+          }
+        } catch {
+          // Continue if query misses
+        }
+      }
     }
 
     // 3. Authoritative Product & Price Lookup from Database (Never trust client prices)
     const authoritativeItems: AuthoritativeLineItem[] = [];
 
     for (const clientItem of items) {
-      const product = DEMO_PRODUCTS.find((p) => p.id === clientItem.productId);
+      if (clientItem.quantity <= 0) {
+        return NextResponse.json(
+          { error: "Item quantity must be greater than zero." },
+          { status: 400 }
+        );
+      }
+
+      let product = DEMO_PRODUCTS.find((p) => p.id === clientItem.productId);
+      if (!product && isSupabaseConfigured()) {
+        product = (await getProductById(clientItem.productId)) || undefined;
+      }
+
       if (!product) {
         return NextResponse.json(
           { error: `Product ID "${clientItem.productId}" not found in catalog.` },
@@ -66,11 +102,18 @@ export async function POST(req: NextRequest) {
         );
       }
 
+      if (!variant.isActive) {
+        return NextResponse.json(
+          { error: `Selected variant for "${product.name}" is currently unavailable.` },
+          { status: 400 }
+        );
+      }
+
       // Check Real Inventory Quantity
       if (variant.inventoryQuantity < clientItem.quantity) {
         return NextResponse.json(
           {
-            error: `Insufficient stock for ${product.name} (${variant.option1Value || "Default"}). Only ${variant.inventoryQuantity} available.`,
+            error: `Insufficient stock for ${product.name} (${variant.option1Value || "Standard"}). Only ${variant.inventoryQuantity} available.`,
           },
           { status: 409 }
         );
@@ -83,7 +126,7 @@ export async function POST(req: NextRequest) {
         variantName: variant.option1Value ? `${variant.option1Name}: ${variant.option1Value}` : undefined,
         sku: variant.sku,
         quantity: clientItem.quantity,
-        unitPrice: variant.price, // Authoritative price from catalog
+        unitPrice: variant.price, // Server-Authoritative Price
         costPrice: variant.costPrice,
         shippingCost: variant.shippingCost,
         weight: variant.weight,
@@ -98,36 +141,36 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: calculation.errors[0] }, { status: 400 });
     }
 
-    // 5. Payment Provider Processing
+    // 5. Payment Processing Architecture
+    // Uses payment provider abstraction for gateway order creation
     const paymentProvider = getPaymentProvider();
-    const paymentIntent = await paymentProvider.createPayment({
+    const paymentOrder = await paymentProvider.createPaymentOrder({
       orderId: `temp_${Date.now()}`,
       orderNumber: "PENDING",
       amount: calculation.totalAmount,
-      currency: "USD",
-      customerEmail: email,
+      currency: currency || "USD",
+      customerEmail: email || undefined,
       customerName: shippingAddress.fullName,
+      customerPhone: shippingAddress.phone,
     });
 
-    if (!paymentIntent.success || paymentIntent.status === "failed") {
-      return NextResponse.json(
-        { error: paymentIntent.errorMessage || "Payment authorization failed." },
-        { status: 402 }
-      );
-    }
+    // Determine initial payment status:
+    // If running in development/mock provider mode and transaction simulates success, mark pending_payment or paid accordingly
+    const isMockPaid = paymentOrder.success && (process.env.PAYMENT_PROVIDER === "development" || process.env.PAYMENT_PROVIDER === "mock");
+    const paymentStatus: "paid" | "pending_payment" = isMockPaid ? "paid" : "pending_payment";
 
-    // 6. Save Confirmed Order in Database
+    // 6. Save Confirmed Order in Local Store & Supabase
     const savedOrder = dbStore.createOrder({
-      email,
-      currency,
+      email: email || "",
+      currency: currency || "USD",
       subtotal: calculation.subtotal,
       shippingAmount: calculation.shippingAmount,
       discountAmount: calculation.discountAmount,
       taxAmount: calculation.taxAmount,
       totalAmount: calculation.totalAmount,
-      paymentStatus: "paid",
+      paymentStatus: paymentStatus as any,
       orderStatus: "confirmed",
-      fulfillmentStatus: "pending_sync",
+      fulfillmentStatus: "unfulfilled",
       shippingAddress,
       idempotencyKey,
       items: authoritativeItems.map((item) => ({
@@ -144,68 +187,119 @@ export async function POST(req: NextRequest) {
       })),
     });
 
-    // 7. Synchronize Order to CJ Dropshipping API v2
-    try {
-      const cjOrderProducts = authoritativeItems
-        .filter((item) => item.cjVariantId)
-        .map((item) => ({
-          vid: item.cjVariantId!,
-          quantity: item.quantity,
-        }));
-
-      if (cjOrderProducts.length > 0) {
-        const cjResponse = await cjService.createOrder({
-          orderNumber: savedOrder.orderNumber,
-          shippingCountryCode: shippingAddress.countryCode,
-          shippingCountry: shippingAddress.country,
-          shippingProvince: shippingAddress.state,
-          shippingCity: shippingAddress.city,
-          shippingAddress: shippingAddress.addressLine1,
-          shippingAddress2: shippingAddress.addressLine2,
-          shippingCustomerName: shippingAddress.fullName,
-          shippingZip: shippingAddress.postalCode,
-          shippingPhone: shippingAddress.phone,
-          payType: 3, // Order only, awaiting balance/payment
-          products: cjOrderProducts,
-          remark: notes,
-        });
-
-        if (cjResponse.code === 200 && cjResponse.data?.orderId) {
-          dbStore.updateOrder(savedOrder.id, {
-            cjOrderId: cjResponse.data.orderId,
-            fulfillmentStatus: "awaiting_cj_payment",
-          });
-        }
+    // Safely deduct inventory in local store
+    for (const item of authoritativeItems) {
+      const prod = DEMO_PRODUCTS.find((p) => p.id === item.productId);
+      const variant = prod?.variants.find((v) => v.id === item.variantId);
+      if (variant) {
+        variant.inventoryQuantity = Math.max(0, variant.inventoryQuantity - item.quantity);
       }
-    } catch (cjErr) {
-      // Order recovery principle: Do NOT lose customer order if CJ API has temporary network hiccup
-      console.error("CJ Sync Error during checkout:", cjErr);
-      // Keeps fulfillmentStatus = 'pending_sync' for background retry queue
     }
 
-    // 8. Dispatch Order Confirmation Email
-    try {
-      await emailService.send({
-        to: { email, name: shippingAddress.fullName },
-        subject: `Order Confirmed: ${savedOrder.orderNumber} | MYCHOICE.in`,
-        template: "order_confirmation",
-        data: {
-          orderNumber: savedOrder.orderNumber,
-          total: savedOrder.totalAmount,
-          customerName: shippingAddress.fullName,
-          shippingAddress,
-          items: savedOrder.items,
-        },
-      });
-    } catch (emailErr) {
-      console.warn("Non-fatal email dispatch error:", emailErr);
+    // Persist to Supabase if connected
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabaseServerClient();
+        const { data: dbOrder, error: orderErr } = await supabase
+          .from("orders")
+          .insert({
+            id: savedOrder.id,
+            order_number: savedOrder.orderNumber,
+            email: email || null,
+            phone: shippingAddress.phone || null,
+            customer_name: shippingAddress.fullName || null,
+            currency: currency || "USD",
+            subtotal: calculation.subtotal,
+            shipping_amount: calculation.shippingAmount,
+            discount_amount: calculation.discountAmount,
+            tax_amount: calculation.taxAmount,
+            total_amount: calculation.totalAmount,
+            payment_status: paymentStatus,
+            order_status: "confirmed",
+            fulfillment_status: "unfulfilled",
+            idempotency_key: idempotencyKey || null,
+            shipping_address: shippingAddress,
+            notes: typeof notes === "string" ? notes : JSON.stringify({ shippingAddress, notes }),
+          })
+          .select()
+          .single();
+
+        if (!orderErr && dbOrder) {
+          // Insert order items
+          await supabase.from("order_items").insert(
+            authoritativeItems.map((item) => ({
+              order_id: dbOrder.id,
+              product_id: item.productId,
+              variant_id: item.variantId,
+              product_name: item.productName,
+              variant_name: item.variantName || null,
+              sku: item.sku,
+              quantity: item.quantity,
+              unit_price: item.unitPrice,
+              total_price: Number((item.unitPrice * item.quantity).toFixed(2)),
+              cj_product_id: item.cjProductId || null,
+              cj_variant_id: item.cjVariantId || null,
+            }))
+          );
+
+          // Inventory deduction in Supabase via RPC or update
+          for (const item of authoritativeItems) {
+            try {
+              await supabase.rpc("decrease_variant_inventory", {
+                p_variant_id: item.variantId,
+                p_quantity: item.quantity,
+              });
+            } catch {
+              // Fallback direct update
+              const { data: vRow } = await supabase
+                .from("product_variants")
+                .select("inventory_quantity")
+                .eq("id", item.variantId)
+                .single();
+              if (vRow) {
+                await supabase
+                  .from("product_variants")
+                  .update({
+                    inventory_quantity: Math.max(0, vRow.inventory_quantity - item.quantity),
+                  })
+                  .eq("id", item.variantId);
+              }
+            }
+          }
+        }
+      } catch (dbErr) {
+        console.warn("[Checkout] Supabase order persistence fallback:", dbErr);
+      }
     }
+
+    // 7. Dispatch Order Confirmation Email
+    if (email) {
+      try {
+        await emailService.send({
+          to: { email, name: shippingAddress.fullName },
+          subject: `Order Confirmed: ${savedOrder.orderNumber} | MYCHOICE.in`,
+          template: "order_confirmation",
+          data: {
+            orderNumber: savedOrder.orderNumber,
+            total: savedOrder.totalAmount,
+            customerName: shippingAddress.fullName,
+            shippingAddress,
+            items: savedOrder.items,
+          },
+        });
+      } catch (emailErr) {
+        console.warn("Non-fatal email dispatch error:", emailErr);
+      }
+    }
+
+    // Future CJ Dropshipping integration is prepared at architecture level and will be triggered in Mega Prompt 2.
+    // In compliance with Rule 14, NO direct CJ API call is made here.
 
     return NextResponse.json({
       success: true,
       orderNumber: savedOrder.orderNumber,
       orderId: savedOrder.id,
-      redirectUrl: `/order/success?order_number=${savedOrder.orderNumber}`,
+      redirectUrl: `/order/success/${savedOrder.orderNumber}`,
     });
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Internal checkout failure";
