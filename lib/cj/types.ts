@@ -38,6 +38,7 @@ export interface CJProductItem {
   pid: string;
   productSku: string;
   productName: string;
+  productNameEn?: string;
   productImage: string;
   productWeight: number;
   productType?: string;
