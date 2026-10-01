@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Search, ShoppingBag, Menu, Heart, User, ChevronDown } from "lucide-react";
 import { Logo } from "@/components/ui/Logo";
 import { CurrencySelector } from "./CurrencySelector";
+import { LanguageSelector } from "./LanguageSelector";
 import { SearchModal } from "@/components/search/SearchModal";
 import { MobileMenu } from "./MobileMenu";
 import { useCart } from "@/lib/cart/context";
@@ -115,9 +116,10 @@ export function Header() {
               </Link>
             </nav>
 
-            {/* Right: Actions (Search, Currency, Wishlist, Account, Bag) */}
-            <div className="flex items-center gap-2 sm:gap-3">
-              <CurrencySelector className="hidden sm:block" />
+            {/* Right: Actions (Language, Currency, Search, Wishlist, Account, Bag) */}
+            <div className="flex items-center gap-1.5 sm:gap-2.5">
+              <LanguageSelector className="hidden md:block" />
+              <CurrencySelector className="hidden sm:inline-flex" />
 
               <button
                 onClick={() => setIsSearchOpen(true)}

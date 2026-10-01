@@ -55,8 +55,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           initialItems = JSON.parse(savedCart);
         }
         const savedCurrency = localStorage.getItem("mychoice_currency") as SupportedCurrency;
-        if (savedCurrency && SITE_CONFIG.currencies.supported.includes(savedCurrency)) {
+        if (savedCurrency && (SITE_CONFIG.currencies.supported as readonly string[]).includes(savedCurrency)) {
           setCurrencyState(savedCurrency);
+        } else {
+          setCurrencyState("USD");
         }
       } catch {
         // Ignore storage errors

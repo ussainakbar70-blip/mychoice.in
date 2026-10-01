@@ -123,7 +123,7 @@ export default function AdminPaymentsPage() {
 
       setStatusMsg({
         type: "success",
-        text: `Refund of ₹${data.refund.amount} completed successfully (${data.refundStatus} refund).`,
+        text: `Refund of $${data.refund.amount} completed successfully (${data.refundStatus} refund).`,
       });
       setRefundModalOpen(false);
       fetchPayments();
@@ -331,7 +331,7 @@ export default function AdminPaymentsPage() {
                     <td className="py-3.5 px-4 whitespace-nowrap">
                       {p.refundStatus && p.refundStatus !== "none" ? (
                         <Badge variant={p.refundStatus === "full" ? "danger" : "warning"}>
-                          {p.refundStatus === "full" ? "Full Refund" : `₹${p.refundAmount} Refunded`}
+                          {p.refundStatus === "full" ? "Full Refund" : `$${p.refundAmount} Refunded`}
                         </Badge>
                       ) : (
                         <span className="text-neutral-400 text-[11px]">None</span>
@@ -413,7 +413,7 @@ export default function AdminPaymentsPage() {
 
               <div>
                 <label className="block font-semibold text-neutral-700 dark:text-neutral-300 mb-1">
-                  Refund Amount (₹)
+                  Refund Amount ($)
                 </label>
                 <input
                   type="number"

@@ -5,6 +5,7 @@ import { AnnouncementBar } from "@/components/layout/AnnouncementBar";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { CartDrawer } from "@/components/cart/CartDrawer";
+import { GoogleTranslateScript } from "@/components/layout/GoogleTranslateScript";
 import { SITE_CONFIG } from "@/lib/config/site";
 
 export const metadata: Metadata = {
@@ -45,6 +46,7 @@ export default function RootLayout({
           <main className="flex-1">{children}</main>
           <CartDrawer />
           <Footer />
+          <GoogleTranslateScript />
         </CartProvider>
       </body>
     </html>

@@ -8,6 +8,7 @@ import { getCategories } from "@/lib/db/categories";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { Logo } from "@/components/ui/Logo";
 import { CurrencySelector } from "./CurrencySelector";
+import { LanguageSelector } from "./LanguageSelector";
 
 interface MobileMenuProps {
   isOpen: boolean;
@@ -124,10 +125,17 @@ export function MobileMenu({ isOpen, onClose, categories: propCategories }: Mobi
             </div>
           </div>
 
-          <div className="border-t border-neutral-100 dark:border-neutral-800 pt-5">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-xs text-neutral-500">Currency</span>
-              <CurrencySelector />
+          <div className="border-t border-neutral-100 dark:border-neutral-800 pt-5 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-neutral-500 font-medium">Language</span>
+              <LanguageSelector />
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs text-neutral-500 font-medium">Store Currency</span>
+              <div className="flex items-center gap-1.5">
+                <CurrencySelector />
+                <span className="text-[11px] text-neutral-400">USD Only</span>
+              </div>
             </div>
             <Link
               href="/track-order"

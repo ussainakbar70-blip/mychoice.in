@@ -33,7 +33,7 @@ export const SITE_CONFIG = {
   ] as NavItem[],
   currencies: {
     default: "USD",
-    supported: ["USD", "INR", "EUR", "GBP", "AED"] as const,
+    supported: ["USD"] as const,
   },
   thresholds: {
     freeShippingUsd: 75.0,
@@ -47,4 +47,4 @@ export const SITE_CONFIG = {
   },
 };
 
-export type SupportedCurrency = (typeof SITE_CONFIG.currencies.supported)[number];
+export type SupportedCurrency = "USD" | "INR" | "EUR" | "GBP" | "AED";

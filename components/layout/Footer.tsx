@@ -7,6 +7,7 @@ import { Logo } from "@/components/ui/Logo";
 import { CATEGORIES } from "@/lib/db/seed-data";
 import { SITE_CONFIG } from "@/lib/config/site";
 import { CurrencySelector } from "./CurrencySelector";
+import { LanguageSelector } from "./LanguageSelector";
 
 export function Footer() {
   const [email, setEmail] = useState("");
@@ -69,11 +70,22 @@ export function Footer() {
             <p className="text-xs text-neutral-400 max-w-sm leading-relaxed">
               {SITE_CONFIG.description}
             </p>
-            <div className="pt-2">
-              <span className="text-[11px] uppercase tracking-wider font-semibold text-neutral-300 block mb-2">
-                Regional Currency
-              </span>
-              <CurrencySelector />
+            <div className="pt-2 space-y-3">
+              <div>
+                <span className="text-[11px] uppercase tracking-wider font-semibold text-neutral-300 block mb-1.5">
+                  Global Language
+                </span>
+                <LanguageSelector />
+              </div>
+              <div>
+                <span className="text-[11px] uppercase tracking-wider font-semibold text-neutral-300 block mb-1.5">
+                  Store Currency
+                </span>
+                <div className="flex items-center gap-2">
+                  <CurrencySelector />
+                  <span className="text-[11px] text-neutral-400">All prices in US Dollars ($)</span>
+                </div>
+              </div>
             </div>
           </div>
 
